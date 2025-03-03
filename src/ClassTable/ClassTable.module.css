@@ -1,0 +1,43 @@
+
+:root{
+    /* Dimmensions */
+    --TABLE-WIDTH: 100%;
+    --TABLE-HEIGHT: 100%;
+    --TABLE-BORDER: 3px;
+    --DATA-COLUMN-BORDER-RIGHT: 2px solid green;
+    --TABLE-BORDER-RADIUS: 10px;
+
+    /* COLORS */
+    --TABLE-BORDER-COLOR: green;
+
+    /* Text */
+    --TABLE-TITLE-ALIGN: center;
+    --TABLE-FONT: Arial, Helvetica, sans-serif;
+    --TABLE-FONT-SIZE: 1.2rem;
+}
+
+.ClassTable{
+
+    /* Dimmensions */
+    width: var(--TABLE-WIDTH);
+    height: var(--TABLE-HEIGHT);
+
+    /* Text */
+    font-family: var(--TABLE-FONT);
+    font-size: var(--TABLE-FONT-SIZE);
+
+    /* Border */
+    border: var(--TABLE-BORDER) solid var(--TABLE-BORDER-COLOR);
+    border-radius: var(--TABLE-BORDER-RADIUS);
+}
+
+.ClassTable td{
+    /* Dimennsions */
+    border-right: var(--DATA-COLUMN-BORDER-RIGHT);    
+}
+
+.ClassTable th{
+
+    /* Dimensions */
+    border-right: var(--DATA-COLUMN-BORDER-RIGHT);
+}
