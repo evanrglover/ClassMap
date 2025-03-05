@@ -1,3 +1,4 @@
+import React from 'react'
 import styles from "./ClassCard.module.css"
 
 function ClassCard(props){

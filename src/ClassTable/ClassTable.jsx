@@ -1,3 +1,4 @@
+import React from 'react'
 import styles from './ClassTable.module.css';
 
 function ClassTable({ columns, data }) {
