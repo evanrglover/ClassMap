@@ -1,0 +1,41 @@
+:root {
+    /* Colors */
+    --CARD-COLOR: rgba(24, 143, 24, 0.884);
+    --CARD-TEXT-COLOR: rgb(252, 246, 236);
+
+    /* Dimmensions */
+    --CARD-WIDTH: 90%;;
+    --CARD-HEIGHT: 40%;
+    --CARD-BORDER-RADIUS: 5px;
+
+    /* Padding and Margins */
+    --CARD-PADDING: 1%;
+
+    /* Text */
+    --CARD-TEXT-FONT: Arial, Helvetica, sans-serif;
+    --CARD-TEXT-ALIGN: center;
+    --CARD-FONT-SIZE: 70%;
+}
+
+.Card{
+
+    /* Colors */
+    background-color: var(--CARD-COLOR);
+    color: var(--CARD-TEXT-COLOR);
+
+    /* Dimmensions */
+    width: var(--CARD-WIDTH);
+    height: var(--CARD-HEIGHT);
+    border-radius: var(--CARD-BORDER-RADIUS);
+
+    /* Padding and Margins */
+    padding: var(--CARD-PADDING);
+
+    /* Text */
+    text-align: var(--CARD-TEXT-ALIGN);
+    font-family: var(--CARD-TEXT-FONT);
+    font-size: var(--CARD-FONT-SIZE);
+
+    /* Alignment */
+    margin: 1% auto;
+}
