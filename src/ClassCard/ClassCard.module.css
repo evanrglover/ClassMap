@@ -1,15 +1,23 @@
 :root {
     /* Colors */
-    --CARD-COLOR: rgba(24, 143, 24, 0.884);
+    --CORE-BG-COLOR: rgba(24, 143, 24, 0.884);
+    --GEN-BG-COLOR: rgb(91, 192, 235);
+
     --CARD-TEXT-COLOR: rgb(252, 246, 236);
 
+    --PREREQ-BORDER-COLOR: rgb(223, 200, 21);
+    --POSTREQ-BORDER-COLOR: rgb(121, 30, 148);
+
     /* Dimmensions */
-    --CARD-WIDTH: 90%;;
-    --CARD-HEIGHT: 40%;
+    --CARD-WIDTH: 90%;
+    --CARD-HEIGHT: auto;
     --CARD-BORDER-RADIUS: 5px;
+    --CARD-BORDER-STYLE: solid;
+    --CARD-BORDER-WIDTH: 3px;
 
     /* Padding and Margins */
     --CARD-PADDING: 1%;
+
 
     /* Text */
     --CARD-TEXT-FONT: Arial, Helvetica, sans-serif;
@@ -20,13 +28,16 @@
 .Card{
 
     /* Colors */
-    background-color: var(--CARD-COLOR);
+    background-color: var(--CORE-BG-COLOR);
     color: var(--CARD-TEXT-COLOR);
 
     /* Dimmensions */
     width: var(--CARD-WIDTH);
     height: var(--CARD-HEIGHT);
     border-radius: var(--CARD-BORDER-RADIUS);
+    border-color: var(--PREREQ-BORDER-COLOR);
+    border-style: var(--CARD-BORDER-STYLE);
+    border-width: var(--CARD-BORDER-WIDTH);
 
     /* Padding and Margins */
     padding: var(--CARD-PADDING);
