@@ -81,6 +81,9 @@ def login():
 def home():
     return "Home"
 
-if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))  # Default to 5000 if PORT is not set
+# This must be outside the if __name__ == '__main__' block for Render
+port = int(os.environ.get("PORT", 5000))
+
+# Run the app - this needs to be at the file level for Render
+if __name__ == "__main__":
     app.run(host="0.0.0.0", port=port)
