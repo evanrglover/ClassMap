@@ -4,6 +4,7 @@ from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, jwt_required, JWTManager
 import psycopg2
+import os
 
 #flask app
 app = Flask(__name__)
@@ -76,4 +77,5 @@ def home():
     return "Home"
 
 if __name__ == '__main__':
-    app.run(debug=True)
+     port = int(os.environ.get("PORT", 10000))  # Default to 5000 for local dev
+     app.run(host="0.0.0.0", port=port)
