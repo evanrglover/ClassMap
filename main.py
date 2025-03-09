@@ -17,14 +17,19 @@ app.config["JWT_SECRET_KEY"] = "supersecretkey"
 #JWT for token management
 jwt = JWTManager(app)
 
-#Connects tot the database
+#Connects to the database (local)
+# def get_db_connection():
+#     return psycopg2.connect(
+#         dbname="localclassmap",
+#         user="Evan1",
+#         password="",
+#         host="localhost"
+#     )
+
+#connects to the actual database
 def get_db_connection():
-    return psycopg2.connect(
-        dbname="localclassmap",
-        user="Evan1",
-        password="",
-        host="localhost"
-    )
+    DATABASE_URL = os.environ.get("DATABASE")  # Render sets this automatically
+    return psycopg2.connect(DATABASE_URL)
 
 
 # @app.route("/register", methods=["POST"])
@@ -77,5 +82,5 @@ def home():
     return "Home"
 
 if __name__ == '__main__':
-     port = int(os.environ.get("PORT", 10000))  # Default to 5000 for local dev
+     port = int(os.environ.get("PORT", 5000))  # Default to 5000 if PORT is not set
      app.run(host="0.0.0.0", port=port)
