@@ -1,7 +1,7 @@
 :root {
     /* Colors */
     --CORE-BG-COLOR: rgba(24, 143, 24, 0.884);
-    --GEN-BG-COLOR: rgb(91, 192, 235);
+    --GEN-BG-COLOR: rgb(39, 124, 161);
 
     --CARD-TEXT-COLOR: rgb(252, 246, 236);
 
@@ -38,6 +38,7 @@
     border-color: var(--PREREQ-BORDER-COLOR);
     border-style: var(--CARD-BORDER-STYLE);
     border-width: var(--CARD-BORDER-WIDTH);
+    border: none;  /*  Setting border to none for now. I'll fix once I learn Redux -Tyler H*/
 
     /* Padding and Margins */
     padding: var(--CARD-PADDING);
@@ -49,4 +50,25 @@
 
     /* Alignment */
     margin: 1% auto;
+}
+
+.Card-Grid {
+    display: grid;
+    grid-template-rows: 2;
+    gap: 0px;
+}
+
+.Card-Row {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.Card-CourseId, .Card-CourseName {
+    text-align: center;
+}
+
+.Card-Credits, .Card-Semesters {
+    font-size: 0.9rem;
+    font-weight: bold;
 }

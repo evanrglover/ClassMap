@@ -8,9 +8,9 @@ import Drawer from './Drawer/Drawer'
 function App() {
 
     const columns = ["Spring 2025", "Summer 2025", "Fall 2025", "Spring 2026", "Fall 2026"];
-    const calc = <ClassCard ClassName="Math 1210" ClassDescription="Calc I"/>
-    const eng = <ClassCard ClassName="Eng 105" ClassDescription="Writing 105"/>
-    const se2 = <ClassCard ClassName="CS 4400" ClassDescription="Software Engineering 2"/>
+    const calc = <ClassCard ClassName="Math 1210" ClassDescription="Calc I" ReqType="general" Credits={3} Semesters="F, SP"/>
+    const eng = <ClassCard ClassName="Eng 105" ClassDescription="Writing 105" ReqType="general" Credits={3} Semesters="F, SP"/>
+    const se2 = <ClassCard ClassName="CS 4400" ClassDescription="Software Engineering 2" ReqType="core" Credits={3} Semesters="F, SP"/>
     const data = [
         { "Spring 2025": se2, "Summer 2025": se2, "Fall 2025": se2 },
         { "Spring 2025": se2, "Summer 2025": se2, "Fall 2025": se2 },
@@ -52,15 +52,15 @@ function App() {
           <div>
           <h1>Courses</h1>
           <Drawer>
-              <ClassCard ClassName="CS 4400" ClassDescription="Software Engineering 2" />
-              <ClassCard ClassName="CS 4450" ClassDescription="Analysis of ProgLang" />
-              <ClassCard ClassName="CS 2300" ClassDescription="Discrete Math" />
-              <ClassCard ClassName="CS 4400" ClassDescription="Software Engineering 2" />
-              <ClassCard ClassName="CS 4450" ClassDescription="Analysis of ProgLang" />
-              <ClassCard ClassName="CS 2300" ClassDescription="Discrete Math" />
-              <ClassCard ClassName="CS 4400" ClassDescription="Software Engineering 2" />
-              <ClassCard ClassName="CS 4450" ClassDescription="Analysis of ProgLang" />
-              <ClassCard ClassName="CS 2300" ClassDescription="Discrete Math" />
+              <ClassCard ClassName="CS 4400" ClassDescription="Software Engineering 2" ReqType="core" Credits={3} Semesters="F, SP"/>
+              <ClassCard ClassName="CS 4450" ClassDescription="Analysis of ProgLang" ReqType="core" Credits={3} Semesters="F, SP"/>
+              <ClassCard ClassName="CS 2300" ClassDescription="Discrete Math" ReqType="core" Credits={3} Semesters="F, SP"/>
+              <ClassCard ClassName="CS 4400" ClassDescription="Software Engineering 2" ReqType="core" Credits={3} Semesters="F, SP"/>
+              <ClassCard ClassName="CS 4450" ClassDescription="Analysis of ProgLang" ReqType="core" Credits={3} Semesters="F, SP"/>
+              <ClassCard ClassName="CS 2300" ClassDescription="Discrete Math" ReqType="core" Credits={3} Semesters="F, SP"/>
+              <ClassCard ClassName="CS 4400" ClassDescription="Software Engineering 2" ReqType="core" Credits={3} Semesters="F, SP"/>
+              <ClassCard ClassName="CS 4450" ClassDescription="Analysis of ProgLang" ReqType="core" Credits={3} Semesters="F, SP"/>
+              <ClassCard ClassName="CS 2300" ClassDescription="Discrete Math" ReqType="core" Credits={3} Semesters="F, SP"/>
 
               {/* <ClassCard ClassName="CS 4400" ClassDescription="Software Engineering 2" />
               <ClassCard ClassName="CS 4450" ClassDescription="Analysis of ProgLang" />
