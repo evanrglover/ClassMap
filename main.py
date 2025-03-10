@@ -28,8 +28,10 @@ jwt = JWTManager(app)
 
 #connects to the actual database
 def get_db_connection():
+
     DATABASE_URL = os.environ.get("DATABASE")  # Render sets this automatically
     return psycopg2.connect(DATABASE_URL)
+    #return psycopg2.connect("postgresql://postgres.tdfnsrizrhmufotpnozl:mudtyp-fenpim-nuWhe0@aws-0-us-west-1.pooler.supabase.com:6543/postgres")
 
 
 # @app.route("/register", methods=["POST"])
