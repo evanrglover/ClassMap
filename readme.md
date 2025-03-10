@@ -16,7 +16,7 @@ Navigate to https://classmapreact.onrender.com/
 Enter 'test@example.com' as the username
 Enter 'testpassword' as the password
 Hit the login button
-The Hosting site for the API only spins up the API server when its in use, so the first time you login it may take a second
+The Hosting site for the API only spins up the API server when its in use, so the first time you login it may take a second, if you hit the login multiple times then it will tell you invalid credentials, be patient
 once you login it should take you to the main page, where nothing happens.
 
 
