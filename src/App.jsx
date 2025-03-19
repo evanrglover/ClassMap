@@ -10,7 +10,7 @@ function App() {
     const columns = ["Spring 2025", "Summer 2025", "Fall 2025", "Spring 2026", "Fall 2026"];
     const calc = <ClassCard ClassName="Math 1210" ClassDescription="Calc I" ReqType="general" Credits={3} Semesters="F, SP"/>
     const eng = <ClassCard ClassName="Eng 105" ClassDescription="Writing 105" ReqType="general" Credits={3} Semesters="F, SP"/>
-    const se2 = <ClassCard ClassName="CS 4400" ClassDescription="Software Engineering 2" ReqType="core" Credits={3} Semesters="F, SP"/>
+    const se2 = <ClassCard ClassName="CS 4400" ClassDescription="Software Engineering 2" ReqType="core" Credits={3} Semesters="F, SP" prereqs={"Calc I"}/>
     const data = [
         { "Spring 2025": se2, "Summer 2025": se2, "Fall 2025": se2 },
         { "Spring 2025": se2, "Summer 2025": se2, "Fall 2025": se2 },

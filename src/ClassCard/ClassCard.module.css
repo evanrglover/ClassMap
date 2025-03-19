@@ -2,6 +2,9 @@
     /* Colors */
     --CORE-BG-COLOR: rgba(24, 143, 24, 0.884);
     --GEN-BG-COLOR: rgb(39, 124, 161);
+    --NO-REQTYPE-BG-COLOR: rgb(165, 165, 165);
+
+    --CARD-HOVER-COLOR:rgba(55, 157, 121, 0.884);  /* This can be changed later */
 
     --CARD-TEXT-COLOR: rgb(252, 246, 236);
 
@@ -50,6 +53,15 @@
 
     /* Alignment */
     margin: 1% auto;
+
+    /* Animation */
+    /* transition: transform .2s;  */
+}
+
+.Card :hover {
+    background-color: var(--CARD-HOVER-COLOR);
+    cursor: pointer;
+    /* transform: scale(1.2) */
 }
 
 .Card-Grid {
