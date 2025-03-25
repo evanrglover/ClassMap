@@ -5,7 +5,7 @@ import ClassTable from './ClassTable/ClassTable.jsx';
 import LoginPage from './pages/Login.jsx';
 import Login from './pages/Login.jsx';
 import SemesterColumn from './SemesterColumn/SemesterColumn.jsx'
-import SemesterColumnContainer from './SemesterColumnContainer/SemesterColumnContainer.jsx';
+import SemesterColumnContainer from './SemesterColumnContainer/SemesterColumn.jsx';
 
 function App() {
     const [token, setToken] = useState(localStorage.getItem("token") || "");
