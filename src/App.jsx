@@ -1,26 +1,39 @@
 import React from 'react';
+import { useState } from 'react';
 import ClassCard from './ClassCard/ClassCard.jsx'
 import ClassTable from './ClassTable/ClassTable.jsx';
 import LoginPage from './pages/Login.jsx';
 import Login from './pages/Login.jsx';
+import SemesterColumn from './SemesterColumn/SemesterColumn.jsx'
+import SemesterColumnContainer from './SemesterColumnContainer/SemesterColumn.jsx';
 
 function App() {
-    const columns = ["Fall 2025", "Spring 2026", "Fall 2026", "Spring 2027", "Fall 2027", "Spring 2028", "Fall 2028", "Spring 2029"]
-
-    const data = [
-
-        { "Fall 2025": <ClassCard ClassName="CS4400" ClassDescription="Software Engineering 2"/>, "Spring 2026": <ClassCard ClassName="CS4400" ClassDescription="Software Engineering 2"/>},
-        { "Fall 2025": <ClassCard ClassName="CS4400" ClassDescription="Software Engineering 2"/>, "Spring 2026": <ClassCard ClassName="CS4400" ClassDescription="Software Engineering 2"/>},
-        { "Fall 2025": <ClassCard ClassName="CS4400" ClassDescription="Software Engineering 2"/>, "Spring 2026": <ClassCard ClassName="CS4400" ClassDescription="Software Engineering 2"/>},
-        { "Fall 2026": <ClassCard ClassName="CS4400" ClassDescription="Software Engineering 2"/>, "Spring 2027": <ClassCard ClassName="CS4400" ClassDescription="Software Engineering 2"/>},
-        { "Fall 2025": <ClassCard ClassName="CS4400" ClassDescription="Software Engineering 2"/>, "Spring 2026": <ClassCard ClassName="CS4400" ClassDescription="Software Engineering 2"/>},
-        { "Fall 2027": <ClassCard ClassName="CS4400" ClassDescription="Software Engineering 2"/>, "Spring 2028": <ClassCard ClassName="CS4400" ClassDescription="Software Engineering 2"/>}
-    ];
+    const [token, setToken] = useState(localStorage.getItem("token") || "");
+    const data = {
+        "Fall 2025": [
+            { className: "CS4400", description: "Software Engineering 2" },
+            { className: "CS3200", description: "Database Management" }
+        ],
+        "Spring 2026": [
+            { className: "CS3500", description: "Algorithms" }
+        ],
+        "Fall 2026": [
+            { className: "CS4100", description: "Artificial Intelligence" }
+        ]
+    };
 
     return (
-        <>
-            <LoginPage />
-        </>
+        <SemesterColumnContainer >
+            {Object.entries(data).map(([semester, classes]) => (
+                    <SemesterColumn
+                        key={semester}
+                        SemesterName={semester}
+                        ClassCards={classes.map((c, index) => (
+                            <ClassCard key={index} ClassName={c.className} ClassDescription={c.description} />
+                        ))}
+                    />
+            ))}
+        </ SemesterColumnContainer>
     );
 }
 

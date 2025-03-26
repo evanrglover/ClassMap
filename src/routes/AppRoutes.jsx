@@ -1,12 +1,15 @@
 import { Routes, Route } from "react-router-dom";
 import Login from "../pages/Login";
-import App from "../App"; // Assuming App is your Home component
+import App from "../App"; // 
+import Register from "../pages/Register";
 
 const AppRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<App />} />  
+      <Route path="/" element={<Login />} />  
       <Route path="/login" element={<Login />} />  
+      <Route path="/register" element={<Register />} />
+      <Route path="/App" element={<App />} />
     </Routes>
   );
 };
