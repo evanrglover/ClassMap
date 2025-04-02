@@ -1,12 +1,22 @@
 :root {
     /* Colors */
-    --CARD-COLOR: rgba(24, 143, 24, 0.884);
+    --CORE-BG-COLOR: rgba(24, 143, 24, 0.884);
+    --GEN-BG-COLOR: rgb(39, 124, 161);
+    --NO-REQTYPE-BG-COLOR: rgb(165, 165, 165);
+
+    --CARD-HOVER-COLOR:rgba(55, 157, 121, 0.884);  /* This can be changed later */
+
     --CARD-TEXT-COLOR: rgb(252, 246, 236);
+
+    --PREREQ-BORDER-COLOR: rgb(223, 200, 21);
+    --POSTREQ-BORDER-COLOR: rgb(121, 30, 148);
 
     /* Dimmensions */
     --CARD-WIDTH: 90%;
-    --CARD-HEIGHT: 40%;
+    --CARD-HEIGHT: auto;
     --CARD-BORDER-RADIUS: 5px;
+    --CARD-BORDER-STYLE: solid;
+    --CARD-BORDER-WIDTH: 3px;
 
     /* Padding and Margins */
     --CARD-PADDING: 1%;
@@ -20,13 +30,17 @@
 .Card{
 
     /* Colors */
-    background-color: var(--CARD-COLOR);
+    background-color: var(--CORE-BG-COLOR);
     color: var(--CARD-TEXT-COLOR);
 
     /* Dimmensions */
     width: var(--CARD-WIDTH);
     height: var(--CARD-HEIGHT);
     border-radius: var(--CARD-BORDER-RADIUS);
+    border-color: var(--PREREQ-BORDER-COLOR);
+    border-style: var(--CARD-BORDER-STYLE);
+    border-width: var(--CARD-BORDER-WIDTH);
+    border: none;  /*  Setting border to none for now. I'll fix once I learn Redux -Tyler H*/
 
     /* Padding and Margins */
     padding: var(--CARD-PADDING);
@@ -38,4 +52,34 @@
 
     /* Alignment */
     margin: 1% auto;
+
+    /* Animation */
+    /* transition: transform .2s;  */
+}
+
+.Card :hover {
+    background-color: var(--CARD-HOVER-COLOR);
+    cursor: pointer;
+    /* transform: scale(1.2) */
+}
+
+.Card-Grid {
+    display: grid;
+    grid-template-rows: 2;
+    gap: 0px;
+}
+
+.Card-Row {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.Card-CourseId, .Card-CourseName {
+    text-align: center;
+}
+
+.Card-Credits, .Card-Semesters {
+    font-size: 0.9rem;
+    font-weight: bold;
 }
