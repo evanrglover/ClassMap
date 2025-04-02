@@ -31,12 +31,12 @@ jwt = JWTManager(app)
 
 #Connects to the database (local)
 # def get_db_connection():
-#     return psycopg2.connect(
-#         dbname="localclassmap",
-#         user="Evan1",
-#         password="",
-#         host="localhost"
-#     )
+#      return psycopg2.connect(
+#          dbname="postgres",
+#          user="postgres",
+#          password="blackbird6000",
+#          host="localhost"
+#      )
 
 #connects to the actual database
 def get_db_connection():
@@ -91,6 +91,16 @@ def login():
 #     return jsonify([{"id": school[0], "name": school[1]} for school in schools])
 
 
+@app.route("/SelectSchool")
+def get_schools():
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT schoolid, schoolname FROM school")
+    schools = cur.fetchall()
+
+    return jsonify([{"schoolid": school[0], "schoolname": school[1]} for school in schools]), 200
+    
+# DO NOT add routes below this line
 @app.route("/")
 def home():
     return "Home"
@@ -101,4 +111,4 @@ port = int(os.environ.get("PORT", 5000))
 # Run the app - this needs to be at the file level for Render
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=port)
->>>>>>> staging:main.py
+

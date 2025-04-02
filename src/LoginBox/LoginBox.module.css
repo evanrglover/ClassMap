@@ -6,6 +6,8 @@
     background-color: var(--BACKGROUND-COLOR);
     width: 50%;
     height: 50%;
+    min-width: 300px;
+    min-height: 400px;
     font-family: Arial, Helvetica, sans-serif;
     display: flex;
     flex-direction: column;
@@ -17,6 +19,8 @@
     display: flex;
     flex-direction: column;
     width: 25vw;
+    max-width: 400px;
+    min-height: 200px;
 }
 
 .Container form input{
