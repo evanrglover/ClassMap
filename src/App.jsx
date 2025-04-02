@@ -4,8 +4,43 @@ import ClassCard from './ClassCard/ClassCard'
 import ClassTable from './ClassTable/ClassTable'
 import Drawer from './Drawer/Drawer'
 
+import { DndContext, closestCorners, useSensors, useSensor, PointerSensor, TouchSensor, KeyboardSensor } from "@dnd-kit/core";
+import { Column } from "./Column/Column"
+import { useState } from "react"
+import { sortableKeyboardCoordinates, arrayMove } from '@dnd-kit/sortable'
 
-function App() {
+
+export default function App() {
+
+    const [tasks, setTasks] = useState([
+        { id: 1, title: "TASK 1: Do something" },
+        { id: 2, title: "TASK 2: Do something else" },
+        { id: 3, title: "TASK 3: Do another thing" },    
+        ]);
+
+    const getTaskPos = id => tasks.findIndex(task => task.id === id)
+
+    const handleDragEnd = event => {
+        const {active, over} = event
+
+        if(active.id === over.id) return;
+
+        setTasks(tasks => {
+            const originalPos = getTaskPos(active.id);
+            const newPos = getTaskPos(over.id);
+            
+            return arrayMove(tasks, originalPos, newPos);
+        });
+    };
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(TouchSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    )
+
 
     const columns = ["Spring 2025", "Summer 2025", "Fall 2025", "Spring 2026", "Fall 2026"];
     const calc = <ClassCard ClassName="Math 1210" ClassDescription="Calc I" ReqType="general" Credits={3} Semesters="F, SP"/>
@@ -32,8 +67,21 @@ function App() {
         { "Spring 2025": calc, "Summer 2025": eng},
     ]
 
+
     return (
       <div>
+          <h1>Test Drag And Drop</h1>
+          <DndContext
+            sensors={sensors}
+            onDragEnd={handleDragEnd}
+            collisionDetection={closestCorners}>
+            <Column tasks={tasks}></Column>
+
+          </DndContext>
+
+
+
+
           <div>
               <h1>Testing ClassTable</h1>
               <ClassTable columns={columns} data={data} />
@@ -62,20 +110,11 @@ function App() {
               <ClassCard ClassName="CS 4450" ClassDescription="Analysis of ProgLang" ReqType="core" Credits={3} Semesters="F, SP"/>
               <ClassCard ClassName="CS 2300" ClassDescription="Discrete Math" ReqType="core" Credits={3} Semesters="F, SP"/>
 
-              {/* <ClassCard ClassName="CS 4400" ClassDescription="Software Engineering 2" />
-              <ClassCard ClassName="CS 4450" ClassDescription="Analysis of ProgLang" />
-              <ClassCard ClassName="CS 2300" ClassDescription="Discrete Math" />
-              <ClassCard ClassName="CS 4400" ClassDescription="Software Engineering 2" />
-              <ClassCard ClassName="CS 4450" ClassDescription="Analysis of ProgLang" />
-              <ClassCard ClassName="CS 2300" ClassDescription="Discrete Math" />
-              <ClassCard ClassName="CS 4400" ClassDescription="Software Engineering 2" />
-              <ClassCard ClassName="CS 4450" ClassDescription="Analysis of ProgLang" />
-              <ClassCard ClassName="CS 2300" ClassDescription="Discrete Math" /> */}
           </Drawer>
           </div>
       </div>
     );
 }
 
-export default App;
+// export default App;
 
