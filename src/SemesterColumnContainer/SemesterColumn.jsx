@@ -1,14 +1,12 @@
-import React from "react";
+import React, { forwardRef } from "react";
 import styles from "./SemesterColumnContainer.module.css";
 
-function SemesterColumnContainer({children}){
-    return(
-        <>
-            <div className={styles['SemesterColumnContainer']}>
-                {children}
-            </div>
-        </>
-    )
-}
+const SemesterColumnContainer = forwardRef(({ children, className, ...rest }, ref) => {
+    return (
+        <div className={`${styles['SemesterColumnContainer']} ${className || ''}`} ref={ref} {...rest}>
+            {children}
+        </div>
+    );
+});
 
 export default SemesterColumnContainer;
