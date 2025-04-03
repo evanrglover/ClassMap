@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-import React from 'react'
-=======
 import React from "react"
->>>>>>> tylers_branch
 import styles from './ClassTable.module.css';
 
 function ClassTable({ columns, data }) {
@@ -29,8 +25,4 @@ function ClassTable({ columns, data }) {
     );
 }
 
-<<<<<<< HEAD
 export default ClassTable;
-=======
-export default ClassTable;
->>>>>>> tylers_branch
