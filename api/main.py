@@ -1,15 +1,15 @@
-<<<<<<< HEAD:api/main.py
-from flask import Flask, request, jsonify
+# <<<<<<< HEAD:api/main.py
+# from flask import Flask, request, jsonify
 
-app = Flask(__name__)
+# app = Flask(__name__)
 
-@app.route("/")
-def home():
-    return "Home"
+# @app.route("/")
+# def home():
+#     return "Home"
 
-if __name__ == '__main__':
-    app.run(debug=True)
-=======
+# if __name__ == '__main__':
+#     app.run(debug=True)
+# =======
 from flask import Flask, request, jsonify
 from flask import Flask, request, jsonify
 from flask_bcrypt import Bcrypt
