@@ -91,6 +91,19 @@ def get_schools():
 def home():
     return "Home"
 
+#Gets the programs 
+@app.route("/getPrograms", methods=["GET"])
+def getPrograms():
+    print("hello")
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT programid, programname FROM program")
+    programs = cur.fetchall()
+    print(programs)
+    return jsonify([{"programid": program[0], "programname": program[1]} for program in programs]), 200
+
+
 # # This must be outside the if __name__ == '__main__' block for Render
 port = int(os.environ.get("PORT", 5000))
 
