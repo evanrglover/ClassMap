@@ -8,8 +8,11 @@ import SemesterColumn from './SemesterColumn/SemesterColumn.jsx';
 import SemesterColumnContainer from './SemesterColumnContainer/SemesterColumn.jsx';
 import SaveButton from './SaveButton/SaveButton.jsx';
 import html2pdf from 'html2pdf.js'; // Import html2pdf
+import { useNavigate, useParams } from 'react-router-dom';
+
 
 function App() {
+    const { school, user} = useParams();
     const [token, setToken] = useState(localStorage.getItem('token') || '');
     const data = {
         'Fall 2025': [
@@ -38,8 +41,11 @@ function App() {
         }
     };
 
+
+
     return (
         <>
+            <h1>Welcome {localStorage.getItem("userName")} </h1>
             <SemesterColumnContainer className="SemesterColumnContainer" ref={containerRef}>
                 {Object.entries(data).map(([semester, classes]) => (
                     <SemesterColumn

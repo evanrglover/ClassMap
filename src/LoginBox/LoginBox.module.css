@@ -57,3 +57,6 @@
 .LoginOptions-Option:hover{
     color: rgb(63, 62, 62);
 }
+h1{
+    text-align: center;
+}

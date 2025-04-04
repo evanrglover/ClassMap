@@ -30,66 +30,53 @@ app.config["JWT_SECRET_KEY"] = "supersecretkey"
 jwt = JWTManager(app)
 
 #Connects to the database (local)
-# def get_db_connection():
-#      return psycopg2.connect(
-#          dbname="postgres",
-#          user="postgres",
-#          password="blackbird6000",
-#          host="localhost"
-#      )
+def get_db_connection():
+     return psycopg2.connect(
+         dbname="localclassmap",
+         user="Evan1",
+         password="",
+         host="localhost"
+     )
 
 #connects to the actual database
-def get_db_connection():
+# def get_db_connection():
 
-    DATABASE_URL = os.environ.get("DATABASE")  # Render sets this automatically
-    return psycopg2.connect(DATABASE_URL)
-    #return psycopg2.connect("postgresql://postgres.tdfnsrizrhmufotpnozl:mudtyp-fenpim-nuWhe0@aws-0-us-west-1.pooler.supabase.com:6543/postgres")
+#     DATABASE_URL = os.environ.get("DATABASE")  # Render sets this automatically
+#     return psycopg2.connect(DATABASE_URL)
+#     #return psycopg2.connect("postgresql://postgres.tdfnsrizrhmufotpnozl:mudtyp-fenpim-nuWhe0@aws-0-us-west-1.pooler.supabase.com:6543/postgres")
 
 
-# @app.route("/register", methods=["POST"])
-# def register():
-#     data = request.get_json()
-#     email = data.get("email")
-#     password = data.get("password")
 
-#     cur.execute("SELECT * FROM users WHERE email = %s", (email,))
-#     if cur.fetchone():
-#         return jsonify({"error": "User already exists"}), 400
 
-#     password_hash = bcrypt.generate_password_hash(password).decode("utf-8")
-#     cur.execute("INSERT INTO users (email, password_hash) VALUES (%s, %s)", (email, password_hash))
-#     conn.commit()
 
-#     return jsonify({"message": "User created successfully"}), 201
-
-# User Login
 @app.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
     email = data.get("email")
     password = data.get("password")
-
+    
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT studentid, password FROM Student WHERE studentemail = %s", (email,))
+    
+    cur.execute("SELECT studentid, password, firstname, lastname FROM Student WHERE studentemail = %s", (email,))
     user = cur.fetchone()
-    print(user)
-
+    
     if user and bcrypt.check_password_hash(user[1], password):
         print("User found")
-        access_token = create_access_token(identity={"id": user[0], "email": email})
-        return jsonify({"access_token": access_token})
-
+        user_id = user[0]
+        user_name = f"{user[2]} {user[3]}"
+        
+        # Create token with user ID in the identity
+        access_token = create_access_token(identity={"UserID": user_id, "email": email, "name": user_name})
+        
+        # Return both token and user information
+        return jsonify({
+            "access_token": access_token,
+            "name": user_name,
+            "userId": user_id
+        }), 200
+    
     return jsonify({"error": "Invalid credentials"}), 401
-
-
-# School Selection Route
-# @app.route("/schools", methods=["GET"])
-# def get_schools():
-#     cur.execute("SELECT id, name FROM schools")
-#     schools = cur.fetchall()
-#     return jsonify([{"id": school[0], "name": school[1]} for school in schools])
-
 
 @app.route("/SelectSchool")
 def get_schools():
@@ -97,7 +84,6 @@ def get_schools():
     cur = conn.cursor()
     cur.execute("SELECT schoolid, schoolname FROM school")
     schools = cur.fetchall()
-
     return jsonify([{"schoolid": school[0], "schoolname": school[1]} for school in schools]), 200
     
 # DO NOT add routes below this line
@@ -105,10 +91,10 @@ def get_schools():
 def home():
     return "Home"
 
-# This must be outside the if __name__ == '__main__' block for Render
+# # This must be outside the if __name__ == '__main__' block for Render
 port = int(os.environ.get("PORT", 5000))
 
-# Run the app - this needs to be at the file level for Render
+# # Run the app - this needs to be at the file level for Render
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=port)
 

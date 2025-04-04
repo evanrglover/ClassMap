@@ -14,8 +14,8 @@ const SelectSchool = ({setToken}) => {
         useEffect(() => {
             const fetchUniversities = async () => {
                 try {
-                    const response = await axios.get("https://ClassMap.onrender.com/SelectSchool");
-                    //const response = await axios.get("http://127.0.0.1:5000/SelectSchool");
+                    // const response = await axios.get("https://ClassMap.onrender.com/SelectSchool");
+                    const response = await axios.get("http://127.0.0.1:5000/SelectSchool");
                     console.log("API response:", response.data);
                     setUniversities(response.data);
                 } catch (error) {
@@ -31,7 +31,8 @@ const SelectSchool = ({setToken}) => {
                 setError("Please select a university.");
                 return;
             }
-            navigate("/login", { state: { selectedSchool: school } });  // 🔹 Pass school as state (optional)
+            //navigate('$/{school}/login', { state: { selectedSchool: school } });  // 🔹 Pass school as state (optional)
+            navigate(`/${school}/login`);
         };
     
     
@@ -45,7 +46,7 @@ const SelectSchool = ({setToken}) => {
                 <select value={school} onChange={(e) => setSchool(e.target.value)}>
                     <option value="">Select a university</option>
                     {universities.map((university) => (
-                        <option key={university.schoolid} value={university.schoolid}>
+                        <option key={university.schoolid} value={university.name}>
                             {university.schoolname}
                         </option>
                     ))}
