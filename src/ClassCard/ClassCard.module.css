@@ -23,7 +23,7 @@
 
     /* Text */
     --CARD-TEXT-FONT: Arial, Helvetica, sans-serif;
-    --CARD-TEXT-ALIGN: center;
+    --CARD-TEXT-ALIGN: left;
     --CARD-FONT-SIZE: 70%;
 }
 
@@ -72,11 +72,11 @@
 .Card-Row {
     display: flex;
     justify-content: space-around;
-    align-items: center;
+    align-items: left;
 }
 
 .Card-CourseId, .Card-CourseName {
-    text-align: center;
+    text-align: left;
 }
 
 .Card-Credits, .Card-Semesters {

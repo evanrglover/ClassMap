@@ -15,6 +15,27 @@
     box-shadow: 5px 5px rgba(2, 65, 2, 0.651);
 }
 
+  select {
+    width: 100%;
+    max-width: 400px;
+    height: 3rem;
+    margin: 1rem 0;
+    padding: 0.5rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+#inputs {
+    background-color: rgb(255, 255, 255);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
 .Container form{
     display: flex;
     flex-direction: column;
@@ -30,14 +51,16 @@
     padding: .5rem;
     font-size: 1rem;
     border-radius: 0;
+    flex-direction: column;
 }
 
-.Container button{
-    width: 25vw;
+.Container button {
+    width: 100%; /* or 25vw like before, but 100% inside the form might look cleaner */
     height: 3rem;
     color: white;
     font-size: 1.3rem;
     background-color: green;
+    margin-top: 1rem;
 }
 
 .Container button:hover{
@@ -58,7 +81,8 @@
 .LoginOptions-Option:hover{
     color: rgb(63, 62, 62);
 }
-.WelcomeText {
+.Container h1 {
     text-align: center;
-  }
+}
+
 

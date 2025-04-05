@@ -1,10 +1,14 @@
-import React from 'react';
-import styles from './Drawer.module.css';
+import React from "react";
+import styles from "./Drawer.module.css";
 
-function Drawer({ children }) {
+function Drawer({ children, isOpen = true }) {
     return (
-    <div className={styles.container}>{children}</div>
-    )
+        <div className={`${styles.drawer} ${isOpen ? styles.open : ''}`}>
+            <div className={styles.drawerContent}>
+                {children}
+            </div>
+        </div>
+    );
 }
 
 export default Drawer;

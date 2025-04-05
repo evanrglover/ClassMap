@@ -43,7 +43,8 @@ const Login = ({ setToken }) => {
 
   return(
     <div className={styles['Container']}>
-      <h1>Welcome {school} student</h1>
+     <h1 className={styles.WelcomeText}>Welcome {school} student</h1>
+
       <div className={styles['InputGroup']}>
         {error && <p style={{ color: "red" }}>{error}</p>}
         <form onSubmit={handleLogin}>

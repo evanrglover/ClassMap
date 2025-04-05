@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../LoginBox/LoginBox.module.css'
+import styles from './SelectSchool.module.css'
 import { useState } from "react";
 import { useEffect } from "react";
 import axios from "axios";
@@ -32,6 +32,7 @@ const SelectSchool = ({setToken}) => {
                 return;
             }
             //navigate('$/{school}/login', { state: { selectedSchool: school } });  // 🔹 Pass school as state (optional)
+            console.log("Selected school:", school);
             navigate(`/${school}/login`);
         };
     

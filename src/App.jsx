@@ -20,9 +20,10 @@ function App() {
     const [error, setError] = useState("");
     const navigate = useNavigate();
     const [programs, setPrograms] = useState([]);
-    const [selectedProgram, setSelectedProgram] = useState(""); // Fixed program state
+    const [selectedProgram, setSelectedProgram] = useState("");
+    const [programClasses, setProgramClasses] = useState([]);
+    const [loading, setLoading] = useState(false);
     
-    //gets the program for the programs dropdown
     useEffect(() => {
         const fetchPrograms = async () => {
             try {
@@ -42,7 +43,6 @@ function App() {
         getUserInfo();
     }, []);
 
-    // Sample data for semesters and classes
     const data = {
         'Fall 2025': [
             { className: 'CS4400', description: 'Software Engineering 2' },
@@ -57,9 +57,22 @@ function App() {
         return null;
     }
 
+    const fetchProgramClasses = async (programId) => {
+        setLoading(true);
+        try {
+            const response = await axios.get(`http://127.0.0.1:5000/getProgramClasses/${programId}`);
+            console.log("Program classes:", response.data);
+            setProgramClasses(response.data);
+        } catch (error) {
+            console.error("Error fetching program classes:", error);
+            setError("Failed to load classes for this program");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const containerRef = useRef(null); // Create a ref
 
-    //saves the schedule as a pdf
     const handleSavePdf = () => {
         if (containerRef.current) { // Use containerRef.current
             const opt = {
@@ -76,16 +89,25 @@ function App() {
         }
     };
 
-    //handles the program change
     const handleProgramChange = (e) => {
-        setSelectedProgram(e.target.value);
-        console.log("Selected program:", e.target.value);
+        const programName = e.target.value;
+        setSelectedProgram(programName);
+        
+        // Find the selected program ID
+        const selectedProgramObj = programs.find(p => p.programname === programName);
+        if (selectedProgramObj) {
+            fetchProgramClasses(selectedProgramObj.programid);
+        } else {
+            setProgramClasses([]);
+        }
+        
+        console.log("Selected program:", programName);
     };
 
     return (
         <>
             <h1>Welcome {localStorage.getItem("userName")} </h1>
-            <div className={styles['InputGroup']}>
+            <div className={styles['InputGroup'] }>
                 {error && <p style={{ color: "red" }}>{error}</p>}
                 <select value={selectedProgram} onChange={handleProgramChange}>
                     <option value="">Select a Program</option>
@@ -95,6 +117,7 @@ function App() {
                         </option>
                     ))}
                 </select>
+                {loading && <p>Loading classes...</p>}
             </div>
             <SemesterColumnContainer className="SemesterColumnContainer" ref={containerRef}>
                 {Object.entries(data).map(([semester, classes]) => (
@@ -113,6 +136,23 @@ function App() {
             </SemesterColumnContainer>
             <SaveButton onClick={handleSavePdf} />
             <Drawer>
+                <h2>Available Classes for {selectedProgram}</h2>
+                <div className="available-classes">
+                    {programClasses.length > 0 ? (
+                        programClasses.map((cls) => (
+                            <ClassCard
+                                key={cls.classid}
+                                ClassName={`${cls.department} ${cls.number}`}
+                                ClassDescription={cls.title}
+                                Credits={cls.credits}
+                                Semesters={Array.isArray(cls.semesters) ? cls.semesters.join(', ') : ''}
+                                PreReqs={cls.prerequisites.join(', ')}
+                            />
+                        ))
+                    ) : (
+                        <p>{selectedProgram ? "No classes found for this program" : "Select a program to view available classes"}</p>
+                    )}
+                </div>
             </Drawer>
         </>
     );
