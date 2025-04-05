@@ -96,7 +96,6 @@ def getProgramClasses(program_id):
         # Get prerequisites for each class
         class_data = []
         for cls in classes:
-            print("it fails here")
             class_id, department, number, title, credits, requires_matriculation, semesters = cls
             
             # Get prerequisites
@@ -148,13 +147,14 @@ def generate_curriculum_plan(program_id):
         # Query to get classes with all needed info
         cur.execute("""
             SELECT c.courseid, c.department, c.coursenum, c.coursename, c.credits,
-                c.requiresmatriculation, c.seasons
+                c.requiresmatriculation, c.semestersavailable
             FROM course c
             JOIN degreerequirments dr ON c.courseid = dr.courseid
             WHERE dr.programid = %s
             GROUP BY c.courseid, c.department, c.coursenum, c.coursename,
                     c.credits, c.requiresmatriculation, c.semestersavailable
         """, (program_id,))
+        print("Got the classes")
         
         classes = cur.fetchall()
         
@@ -170,19 +170,25 @@ def generate_curriculum_plan(program_id):
                 JOIN course p ON pr.prereqid = p.courseid
                 WHERE pr.courseid = %s
             """, (class_id,))
+
             
             prerequisites = cur.fetchall()
             prereq_list = [f"{p[0]} {p[1]}" for p in prerequisites]
             
-            # Get semesters when the course is offered
-            cur.execute("""
-                SELECT semester
-                FROM coursesemester
-                WHERE courseid = %s
-            """, (class_id,))
+            # # Get semesters when the course is offered
+            # cur.execute("""
+            #     SELECT SemestersAvailable
+            #     FROM course
+            #     WHERE courseid = %s
+            # """, (class_id,))
+
+
             
-            semesters_data = cur.fetchall()
-            semesters = [s[0].lower() for s in semesters_data] if semesters_data else ['fall', 'spring']
+            # semesters_data = cur.fetchall()
+            # semesters = [s[0].lower() for s in semesters_data] if semesters_data else ['fall', 'spring']
+            if isinstance(semesters, str):
+                semesters = semesters.strip('{}').split(',')
+            semesters = [s.lower() for s in semesters] if semesters else ['fall', 'spring']
             
             # Create ClassInfo object
             class_info_obj = ClassInfo(
@@ -197,12 +203,15 @@ def generate_curriculum_plan(program_id):
             class_info_objects.append(class_info_obj)
         
         # Create planner and add classes
-        planner = CurriculumPlanner(start_semester=start_semester, start_year=start_year)
+        planner = CurriculumPlanner(start_semester="Fall", start_year=start_year)
         for course in class_info_objects:
+            print(course.semesters)
             planner.add_class(course)
+
         
         # Generate plan
         semester_plan = planner.plan_curriculum()
+        print(semester_plan)
         
         # Format plan for frontend
         formatted_plan = {}

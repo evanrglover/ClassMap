@@ -11,7 +11,7 @@ class CurriculumPlanner:
         self.classes: Dict[str, ClassInfo] = {}
         self.matriculation_courses = {"CS 1400", "CS 1410", "CS 2300", "CS 2420", "CS 2450", "MATH 1210"}
         self.semester_plan = {i: [] for i in range(1, 13)}  # Increase to handle more semesters including summers
-        self.max_classes_per_semester = 5
+        self.max_classes_per_semester = 4
         self.start_semester = start_semester
         self.start_year = start_year
     
@@ -32,6 +32,7 @@ class CurriculumPlanner:
         completed_courses = set()
         matriculation_obtained = False
         semester = 1
+
         
         while sorted_classes and semester <= 12:  # Increased max semesters
             # At the start of a new semester, update the completed courses from previous semesters
@@ -52,9 +53,7 @@ class CurriculumPlanner:
                 # Skip if we've reached the maximum classes for this semester
                 if scheduled_this_semester >= self.max_classes_per_semester:
                     break
-                    
                 course = self.classes[cls]
-                
                 # Skip if matriculation is required but not obtained
                 if course.requires_matriculation and not matriculation_obtained:
                     continue
@@ -66,7 +65,7 @@ class CurriculumPlanner:
                 # Skip if the course is not available in this semester
                 if not self._check_semester_availability(course, semester):
                     continue
-                    
+                
                 # Schedule the course
                 current_semester_classes.append(cls)
                 completed_courses.add(cls)
@@ -198,7 +197,7 @@ def main():
     for course in class_info:
         planner.add_class(course)
     
-    planner.plan_curriculum()
+    plan = planner.plan_curriculum()
     planner.print_curriculum()
 
 if __name__ == "__main__":

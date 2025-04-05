@@ -23,6 +23,7 @@ function App() {
     const [selectedProgram, setSelectedProgram] = useState("");
     const [programClasses, setProgramClasses] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [data, setData] = useState({});
     
     useEffect(() => {
         const fetchPrograms = async () => {
@@ -43,14 +44,14 @@ function App() {
         getUserInfo();
     }, []);
 
-    const data = {
-        'Fall 2025': [
-            { className: 'CS4400', description: 'Software Engineering 2' },
-            { className: 'CS3200', description: 'Database Management' },
-        ],
-        'Spring 2026': [{ className: 'CS3500', description: 'Algorithms' }],
-        'Fall 2026': [{ className: 'CS4100', description: 'Artificial Intelligence' }],
-    };
+    // const data = {
+    //     'Fall 2025': [
+    //         { className: 'CS4400', description: 'Software Engineering 2' },
+    //         { className: 'CS3200', description: 'Database Management' },
+    //     ],
+    //     'Spring 2026': [{ className: 'CS3500', description: 'Algorithms' }],
+    //     'Fall 2026': [{ className: 'CS4100', description: 'Artificial Intelligence' }],
+    // };
 
     const getUserInfo = async() => {
         const response = await axios.get("http://127.0.0.1:5000/getPrograms", {});
@@ -61,13 +62,33 @@ function App() {
         setLoading(true);
         try {
             const response = await axios.get(`http://127.0.0.1:5000/getProgramClasses/${programId}`);
-            console.log("Program classes:", response.data);
+            //console.log("Program classes:", response.data);
             setProgramClasses(response.data);
         } catch (error) {
             console.error("Error fetching program classes:", error);
             setError("Failed to load classes for this program");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const generatePlan = async (programId) => {
+        try {
+            const response = await axios.post(
+                `http://127.0.0.1:5000/generatePlan/${programId}`,
+                {
+                    startSemester: "Spring",  // You can make these configurable with UI inputs
+                    startYear: 2025
+                }
+            );
+            
+            console.log("Generated plan:", response.data);
+            setData(response.data);  // Assuming you have a state variable called 'data'
+            console.log("Program classes:", response.data);
+
+        } catch (error) {
+            console.error("Error generating plan:", error);
+            setError("Failed to generate curriculum plan");
         }
     };
 
@@ -97,6 +118,7 @@ function App() {
         const selectedProgramObj = programs.find(p => p.programname === programName);
         if (selectedProgramObj) {
             fetchProgramClasses(selectedProgramObj.programid);
+            generatePlan(selectedProgramObj.programid);  // Add this line
         } else {
             setProgramClasses([]);
         }
@@ -120,19 +142,23 @@ function App() {
                 {loading && <p>Loading classes...</p>}
             </div>
             <SemesterColumnContainer className="SemesterColumnContainer" ref={containerRef}>
-                {Object.entries(data).map(([semester, classes]) => (
-                    <SemesterColumn
-                        key={semester}
-                        SemesterName={semester}
-                        ClassCards={classes.map((c, index) => (
-                            <ClassCard
-                                key={index}
-                                ClassName={c.className}
-                                ClassDescription={c.description}
-                            />
-                        ))}
-                    />
-                ))}
+                {Object.entries(data).length > 0 ? (
+                    Object.entries(data).map(([semester, classes]) => (
+                        <SemesterColumn
+                            key={semester}
+                            SemesterName={semester}
+                            ClassCards={classes.map((c, index) => (
+                                <ClassCard
+                                    key={index}
+                                    ClassName={c.className}
+                                    ClassDescription={c.description}
+                                />
+                            ))}
+                        />
+                    ))
+                ) : (
+                    <p>Select a program to generate a curriculum plan</p>
+                )}
             </SemesterColumnContainer>
             <SaveButton onClick={handleSavePdf} />
             <Drawer>
