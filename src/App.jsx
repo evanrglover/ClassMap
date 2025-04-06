@@ -28,8 +28,10 @@ function App() {
     useEffect(() => {
         const fetchPrograms = async () => {
             try {
+                console.log("hello");
                 const response = await axios.get("https://ClassMap.onrender.com/getPrograms");
                 //const response = await axios.get("https://127.0.0.1:5000/getPrograms");
+                console.log("world");
                 console.log("API response:", response.data);
                 setPrograms(response.data);
             } catch (error) {
