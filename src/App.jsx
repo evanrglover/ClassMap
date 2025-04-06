@@ -29,7 +29,7 @@ function App() {
         const fetchPrograms = async () => {
             try {
                 // const response = await axios.get("https://ClassMap.onrender.com/SelectSchool");
-                const response = await axios.get("http://127.0.0.1:5000/getPrograms");
+                const response = await axios.get("https://127.0.0.1:5000/getPrograms");
                 console.log("API response:", response.data);
                 setPrograms(response.data);
             } catch (error) {
