@@ -28,7 +28,7 @@ function App() {
     useEffect(() => {
         const fetchPrograms = async () => {
             try {
-                const response = await axios.get("https://ClassMap.onrender.com/SelectSchool");
+                const response = await axios.get("https://ClassMap.onrender.com/getPrograms");
                 //const response = await axios.get("https://127.0.0.1:5000/getPrograms");
                 console.log("API response:", response.data);
                 setPrograms(response.data);
@@ -44,12 +44,12 @@ function App() {
         getUserInfo();
     }, []);
 
-    const getUserInfo = async() => {
-        //const response = await axios.get("http://127.0.0.1:5000/getPrograms", {});
-        const response = await axios.get("https://ClassMap.onrender.com/getPrograms", {});
+    // const getUserInfo = async() => {
+    //     //const response = await axios.get("https://127.0.0.1:5000/getPrograms", {});
+    //     const response = await axios.get("https://ClassMap.onrender.com/getPrograms", {});
 
-        return null;
-    }
+    //     return null;
+    // }
 
     const fetchProgramClasses = async (programId) => {
         setLoading(true);
