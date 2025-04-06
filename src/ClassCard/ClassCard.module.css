@@ -14,6 +14,7 @@
     /* Dimmensions */
     --CARD-WIDTH: 90%;
     --CARD-HEIGHT: auto;
+    MAX-WIDTH: 300px;              /*  Fix this later. It's currently making drawer with one item small. */
     --CARD-BORDER-RADIUS: 5px;
     --CARD-BORDER-STYLE: solid;
     --CARD-BORDER-WIDTH: 3px;

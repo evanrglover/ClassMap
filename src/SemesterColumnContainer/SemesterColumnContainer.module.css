@@ -3,6 +3,7 @@
     height: 80vh;
     background: black;
     padding: 1rem;
+    margin: 10px;
     display: flex;
     align-items: center;
     gap: 1rem;

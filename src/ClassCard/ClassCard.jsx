@@ -1,10 +1,19 @@
 import React from "react"
 import styles from "./ClassCard.module.css"
+import { useDraggable } from '@dnd-kit/core';
 
 function ClassCard(props){
 
         const prereqs = [props.PreReqs];
         const postreqs = [props.PostReqs];
+
+        const { attributes, listeners, setNodeRef, transform } = useDraggable({
+            id: props.ClassName
+        });
+
+        const style = transform
+        ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
+        : undefined;
     
         const bgColor = props.ReqType === "core"
         ? "var(--CORE-BG-COLOR)"
@@ -14,7 +23,7 @@ function ClassCard(props){
 
         return(
         <>
-            <div className={styles["Card"]} style={{ backgroundColor: bgColor }}>
+            <div ref={setNodeRef} {...listeners} {...attributes} className={styles["Card"]} style={{ backgroundColor: bgColor }}>
                 <div className={styles["Card-Grid"]}>
                     {/* First row: Class Name and Description */}
                     <div className={styles["Card-Row"]}>
