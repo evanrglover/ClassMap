@@ -40,9 +40,6 @@ function App() {
         fetchPrograms();
     }, []);
     
-    useEffect(() => {
-        getUserInfo();
-    }, []);
 
     // const getUserInfo = async() => {
     //     //const response = await axios.get("https://127.0.0.1:5000/getPrograms", {});
