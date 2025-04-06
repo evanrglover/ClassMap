@@ -10,7 +10,9 @@ from CurriculumPlanner import CurriculumPlanner
 # flask app
 app = Flask(__name__)
 # CORS app for handling requests from different domains
-CORS(app)
+#CORS(app, supports_credentials=True)
+CORS(app, resources={r"/*": {"origins": "*"}})
+
 # Used for hashing passwords
 bcrypt = Bcrypt(app)
 # token for token stuff, the key needs to be changed probably
