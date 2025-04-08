@@ -1,23 +1,26 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+*{
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+html, body{
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  align-items: center;
+
 }
 
+#root{
+  height: 100%;
+  background-color: #00843d;
+  padding: 1%;
+
+
+  width: 100%;
+}
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);
@@ -38,5 +41,17 @@
 }
 
 .read-the-docs {
-  color: #888;
+  color: #1bff0a;
+}
+
+h1{
+  text-align: left;
+  padding: 1%;
+}
+
+root select{
+  background-color: black;
+  width: 20%;
+  height: 5%;
+  font-size: large;
 }
