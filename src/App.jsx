@@ -7,6 +7,7 @@ import Login from './pages/Login.jsx';
 import SemesterColumn from './SemesterColumn/SemesterColumn.jsx';
 import SemesterColumnContainer from './SemesterColumnContainer/SemesterColumn.jsx';
 import SaveButton from './SaveButton/SaveButton.jsx';
+import CreateButton from './CreateButton/CreateButton.jsx';
 import html2pdf from 'html2pdf.js'; // Import html2pdf
 
 function App() {
@@ -56,6 +57,8 @@ function App() {
                 ))}
             </SemesterColumnContainer>
             <SaveButton onClick={handleSavePdf} />
+            <CreateButton />
+
         </>
     );
 }
