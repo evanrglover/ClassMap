@@ -91,7 +91,7 @@ function App() {
                             id={semester}
                             ClassCards={classes.map((c, index) => (
                                 <ClassCard
-                                    key={c.id || index}
+                                    key={c.id || c.className}
                                     ClassName={c.className}
                                     ClassDescription={c.description}
                                     id={c.id}
