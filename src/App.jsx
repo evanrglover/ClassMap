@@ -29,8 +29,8 @@ function App() {
         const fetchPrograms = async () => {
             try {
                 console.log("hello");
-                const response = await axios.get("https://ClassMap.onrender.com/getPrograms");
-                //const response = await axios.get("https://127.0.0.1:5000/getPrograms");
+                // const response = await axios.get("https://ClassMap.onrender.com/getPrograms");
+                const response = await axios.get("https://127.0.0.1:5000/getPrograms");
                 console.log("world");
                 console.log("API response:", response.data);
                 setPrograms(response.data);
@@ -53,8 +53,8 @@ function App() {
     const fetchProgramClasses = async (programId) => {
         setLoading(true);
         try {
-            //const response = await axios.get(`http://127.0.0.1:5000/getProgramClasses/${programId}`);
-            const response = await axios.get(`https://ClassMap.onrender.com/getProgramClasses/${programId}`);
+            const response = await axios.get(`http://127.0.0.1:5000/getProgramClasses/${programId}`);
+            // const response = await axios.get(`https://ClassMap.onrender.com/getProgramClasses/${programId}`);
 
             setProgramClasses(response.data);
         } catch (error) {
@@ -67,20 +67,20 @@ function App() {
 
     const generatePlan = async (programId) => {
         try {
+            const response = await axios.post(
+                `http://127.0.0.1:5000/generatePlan/${programId}`,
+                {
+                    startSemester: "Spring", 
+                    startYear: 2025
+                }
+            );
             // const response = await axios.post(
-            //     `http://127.0.0.1:5000/generatePlan/${programId}`,
+            //     `https://ClassMap.onrender.com/generatePlan/${programId}`,
             //     {
             //         startSemester: "Spring", 
             //         startYear: 2025
             //     }
             // );
-            const response = await axios.post(
-                `https://ClassMap.onrender.com/generatePlan/${programId}`,
-                {
-                    startSemester: "Spring", 
-                    startYear: 2025
-                }
-        );
 
             
             console.log("Generated plan:", response.data);
@@ -153,17 +153,31 @@ function App() {
     return (
         <>
             <h1>Welcome {localStorage.getItem("userName")} </h1>
-            <div className={styles['InputGroup'] }>
-                {error && <p style={{ color: "red" }}>{error}</p>}
-                <select value={selectedProgram} onChange={handleProgramChange}>
-                    <option value="">Select a Program</option>
-                    {programs.map((program) => (
-                        <option key={program.programid} value={program.programname}>
-                            {program.programname}
-                        </option>
-                    ))}
-                </select>
-                {loading && <p>Loading classes...</p>}
+            <div id="inputs" style={{ display: 'flex', flexDirection: 'row', justifyContent: 'left' }}>
+                <div className={styles['InputGroup'] }>
+                    {error && <p style={{ color: "red" }}>{error}</p>}
+                    <select value={selectedProgram} onChange={handleProgramChange}>
+                        <option value="">Select a Program</option>
+                        {programs.map((program) => (
+                            <option key={program.programid} value={program.programname}>
+                                {program.programname}
+                            </option>
+                        ))}
+                    </select>
+                    {loading && <p>Loading classes...</p>}
+                </div>
+                <div className={styles['InputGroup'] }>
+                    {error && <p style={{ color: "red" }}>{error}</p>}
+                    <select value={selectedProgram} onChange={handleProgramChange}>
+                        <option value="">Select a Saved Schedule</option>
+                        {programs.map((program) => (
+                            <option key={program.programid} value={program.programname}>
+                                {program.programname}
+                            </option>
+                        ))}
+                    </select>
+                    {loading && <p>Loading classes...</p>}
+            </div>
             </div>
             <SemesterColumnContainer className="SemesterColumnContainer" ref={containerRef}>
                 {Object.entries(data).length > 0 ? (

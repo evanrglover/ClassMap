@@ -21,17 +21,17 @@ app.config["JWT_SECRET_KEY"] = "supersecretkey"
 jwt = JWTManager(app)
 
 # Connects to the database (local)
-# def get_db_connection():
-#     return psycopg2.connect(
-#         dbname="localclassmap",
-#         user="Evan1",
-#         password="",
-#         host="localhost"
-#     )
 def get_db_connection():
+    return psycopg2.connect(
+        dbname="localclassmap",
+        user="Evan1",
+        password="",
+        host="localhost"
+    )
+# def get_db_connection():
 
-    DATABASE_URL = os.environ.get("DATABASE")  # Render sets this automatically
-    return psycopg2.connect(DATABASE_URL)
+#     DATABASE_URL = os.environ.get("DATABASE")  # Render sets this automatically
+#     return psycopg2.connect(DATABASE_URL)
 
 @app.route("/login", methods=["POST"])
 def login():
