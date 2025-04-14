@@ -5,6 +5,7 @@ import axios from "axios";
 
 import ClassCard from './ClassCard/ClassCard.jsx';
 import ClassTable from './ClassTable/ClassTable.jsx';
+import CreateButton from './CreateButton/CreateButton.jsx';
 import LoginPage from './pages/Login.jsx';
 import Login from './pages/Login.jsx';
 import Drawer from './Drawer/Drawer.jsx';
@@ -114,18 +115,14 @@ function App() {
     const handleProgramChange = (e) => {
         const programName = e.target.value;
         setSelectedProgram(programName);
-        
-        // Find the selected program ID
+    
         const selectedProgramObj = programs.find(p => p.programname === programName);
         if (selectedProgramObj) {
             fetchProgramClasses(selectedProgramObj.programid);
-            generatePlan(selectedProgramObj.programid);
         } else {
             setProgramClasses([]);
         }
-        
-        console.log("Selected program:", programName);
-    };
+    };    
 
     // Helper function to sort semesters chronologically
     const sortSemesters = (semesters) => {
@@ -186,6 +183,13 @@ function App() {
                 )}
             </SemesterColumnContainer>
             <SaveButton onClick={handleSavePdf} />
+            <CreateButton onClick={() => {
+                const selectedProgramObj = programs.find(p => p.programname === selectedProgram);
+                if (selectedProgramObj) {
+                    generatePlan(selectedProgramObj.programid);
+                }
+            }} />
+
             <Drawer>
                 <h2>Available Classes for {selectedProgram}</h2>
                 <div className="available-classes">
