@@ -64,10 +64,16 @@ function App() {
     
         if (!sourceSemester || !targetSemester) return;
     
+        // Don't do anything if dragging into same column
+        if (sourceSemester === targetSemester) return;
+    
         const sourceItems = [...data[sourceSemester]];
         const targetItems = [...data[targetSemester]];
-        const movedItemIndex = sourceItems.findIndex((cls) => cls.id === active.id);
     
+        // Prevent duplicates
+        if (targetItems.some((cls) => cls.id === active.id)) return;
+    
+        const movedItemIndex = sourceItems.findIndex((cls) => cls.id === active.id);
         if (movedItemIndex === -1) return;
     
         const [movedItem] = sourceItems.splice(movedItemIndex, 1);
