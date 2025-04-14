@@ -13,6 +13,8 @@ import SemesterColumnContainer from './SemesterColumnContainer/SemesterColumn.js
 import SaveButton from './SaveButton/SaveButton.jsx';
 import html2pdf from 'html2pdf.js'; // Import html2pdf
 import { useNavigate, useParams } from 'react-router-dom';
+import { DndContext, closestCorners } from '@dnd-kit/core';
+import { SortableContext, arrayMove } from '@dnd-kit/sortable';
 
 function App() {
     const { school, user } = useParams();
@@ -50,6 +52,34 @@ function App() {
     //     return null;
     // }
 
+    const handleDragEnd = (event) => {
+        const { active, over } = event;
+    
+        if (!over || active.id === over.id) return;
+    
+        const sourceSemester = Object.keys(data).find((semester) =>
+            data[semester].some((cls) => cls.id === active.id)
+        );
+        const targetSemester = over.id;
+    
+        if (!sourceSemester || !targetSemester) return;
+    
+        const sourceItems = [...data[sourceSemester]];
+        const targetItems = [...data[targetSemester]];
+        const movedItemIndex = sourceItems.findIndex((cls) => cls.id === active.id);
+    
+        if (movedItemIndex === -1) return;
+    
+        const [movedItem] = sourceItems.splice(movedItemIndex, 1);
+        targetItems.push(movedItem);
+    
+        setData({
+            ...data,
+            [sourceSemester]: sourceItems,
+            [targetSemester]: targetItems,
+        });
+    };
+
     const fetchProgramClasses = async (programId) => {
         setLoading(true);
         try {
@@ -84,7 +114,20 @@ function App() {
 
             
             console.log("Generated plan:", response.data);
-            setData(response.data);
+            const newData = {};
+            Object.entries(response.data).forEach(([semester, classes]) => {
+                newData[semester] = classes.map((cls) => ({
+                    ...cls,
+                    id: `${cls.className}` // Ensure unique ID
+                }));
+                console.log(`Assigning IDs for semester ${semester}:`);
+                classes.forEach((cls) => {
+                console.log(` -> ${cls.className}`);
+            });
+            });
+            
+
+            setData(newData);
             console.log("Program classes:", response.data);
 
         } catch (error) {
@@ -165,26 +208,30 @@ function App() {
                 </select>
                 {loading && <p>Loading classes...</p>}
             </div>
-            <SemesterColumnContainer className="SemesterColumnContainer" ref={containerRef}>
-                {Object.entries(data).length > 0 ? (
-                    // Sort the semesters chronologically before mapping
-                    sortSemesters(Object.keys(data)).map((semester) => (
-                        <SemesterColumn
-                            key={semester}
-                            SemesterName={semester}
-                            ClassCards={data[semester].map((c, index) => (
-                                <ClassCard
-                                    key={index}
-                                    ClassName={c.className}
-                                    ClassDescription={c.description}
-                                />
-                            ))}
-                        />
-                    ))
-                ) : (
-                    <p>Select a program to generate a curriculum plan</p>
-                )}
+
+            <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
+                <SemesterColumnContainer className="SemesterColumnContainer" ref={containerRef}>
+                    {Object.entries(data).length > 0 ? (
+                        // Sort the semesters chronologically before mapping
+                        sortSemesters(Object.keys(data)).map((semester) => (
+                            <SemesterColumn
+                                key={semester}
+                                SemesterName={semester}
+                                ClassCards={data[semester].map((c, index) => (
+                                    <ClassCard
+                                        key={c.id}
+                                        id={c.id}
+                                        ClassName={c.className}
+                                        ClassDescription={c.description}
+                                    />
+                                ))}
+                            />
+                        ))
+                    ) : (
+                        <p>Select a program to generate a curriculum plan</p>
+                    )}
             </SemesterColumnContainer>
+            </DndContext>
             <SaveButton onClick={handleSavePdf} />
             <Drawer>
                 <h2>Available Classes for {selectedProgram}</h2>
@@ -193,6 +240,7 @@ function App() {
                         programClasses.map((cls) => (
                             <ClassCard
                                 key={cls.classid}
+                                id={cls.classid}
                                 ClassName={`${cls.department} ${cls.number}`}
                                 ClassDescription={cls.title}
                                 Credits={cls.credits}
