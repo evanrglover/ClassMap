@@ -31,7 +31,7 @@ function ClassCard(props){
         
         return(
         <>
-            #The Flipping Card
+            {/* The Flipping Card */}
             <div ref={setNodeRef} {...listeners} {...attributes} className={styles["Card"]} style={{ backgroundColor: bgColor }}>
                 <ReactCardFlip flipDirection="horizontal" isFlipped={isFlipped}>
                     <div className='card' onClick={flipCard}>
