@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import styles from "./ClassCard.module.css"
+import { useDraggable } from '@dnd-kit/core';
 import ReactCardFlip from "react-card-flip";
 import ClassDescription from "../ClassDescription/ClassDescriptionBox"
-import { useDraggable } from '@dnd-kit/core';
 
 function ClassCard(props){
         const [isFlipped, setIsFlipped] = useState(false);
@@ -32,16 +32,13 @@ function ClassCard(props){
         return(
         <>
             #The Flipping Card
-            <div className={styles["Card"]} style={{ backgroundColor: bgColor }}>
+            <div ref={setNodeRef} {...listeners} {...attributes} className={styles["Card"]} style={{ backgroundColor: bgColor }}>
                 <ReactCardFlip flipDirection="horizontal" isFlipped={isFlipped}>
                     <div className='card' onClick={flipCard}>
                         <h2 className={styles["Card-CourseId"]}>{props.ClassName}</h2>
                         <h3 className={styles["Card-CourseName"]}>{props.ClassDescription}</h3>
                         <p className={styles["Card-Credits"]}>Credits: {props.Credits}</p>
                         <p className={styles["Card-Semesters"]}>Semesters: {props.Semesters}</p>
-
-
-
 
                         <div className={styles["Card-Grid"]}>
                             {/* First row: Class Name and Description */}
@@ -60,19 +57,6 @@ function ClassCard(props){
                         />
                     </div>
                 </ReactCardFlip>
-            <div ref={setNodeRef} {...listeners} {...attributes} className={styles["Card"]} style={{ backgroundColor: bgColor }}>
-                <div className={styles["Card-Grid"]}>
-                    {/* First row: Class Name and Description */}
-                    <div className={styles["Card-Row"]}>
-                        <h2 className={styles["Card-CourseId"]}>{props.ClassName}</h2>
-                        <h3 className={styles["Card-CourseName"]}>{props.ClassDescription}</h3>
-                    </div>
-                    {/* Second row: Credits and Semesters */}
-                    <div className={styles["Card-Row"]}>
-                        <p className={styles["Card-Credits"]}>Credits: {props.Credits}</p>
-                        <p className={styles["Card-Semesters"]}>Semesters: {props.Semesters}</p>
-                    </div>
-                </div>
             </div>
         </>
     )
