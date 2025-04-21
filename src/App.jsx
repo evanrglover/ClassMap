@@ -5,7 +5,6 @@ import axios from "axios";
 
 import ClassCard from './ClassCard/ClassCard.jsx';
 import ClassTable from './ClassTable/ClassTable.jsx';
-import CreateButton from './CreateButton/CreateButton.jsx';
 import LoginPage from './pages/Login.jsx';
 import Login from './pages/Login.jsx';
 import Drawer from './Drawer/Drawer.jsx';
@@ -115,14 +114,18 @@ function App() {
     const handleProgramChange = (e) => {
         const programName = e.target.value;
         setSelectedProgram(programName);
-    
+        
+        // Find the selected program ID
         const selectedProgramObj = programs.find(p => p.programname === programName);
         if (selectedProgramObj) {
             fetchProgramClasses(selectedProgramObj.programid);
+            generatePlan(selectedProgramObj.programid);
         } else {
             setProgramClasses([]);
         }
-    };    
+        
+        console.log("Selected program:", programName);
+    };
 
     // Helper function to sort semesters chronologically
     const sortSemesters = (semesters) => {
@@ -146,6 +149,16 @@ function App() {
             return semesterOrder[semA] - semesterOrder[semB];
         });
     };
+
+    // Get all scheduled class names from the generated plan
+    const scheduledClassNames = new Set(
+        Object.values(data).flat().map(c => c.className)
+    );
+
+    // Filter the drawer classes to take out the ones in the schedule
+    const availableDrawerClasses = programClasses.filter(
+        cls => !scheduledClassNames.has(`${cls.department} ${cls.number}`)
+    );
 
     return (
         <>
@@ -183,18 +196,11 @@ function App() {
                 )}
             </SemesterColumnContainer>
             <SaveButton onClick={handleSavePdf} />
-            <CreateButton onClick={() => {
-                const selectedProgramObj = programs.find(p => p.programname === selectedProgram);
-                if (selectedProgramObj) {
-                    generatePlan(selectedProgramObj.programid);
-                }
-            }} />
-
             <Drawer>
                 <h2>Available Classes for {selectedProgram}</h2>
                 <div className="available-classes">
                     {programClasses.length > 0 ? (
-                        programClasses.map((cls) => (
+                        availableDrawerClasses.map((cls) => (
                             <ClassCard
                                 key={cls.classid}
                                 ClassName={`${cls.department} ${cls.number}`}
