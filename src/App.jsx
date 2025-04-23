@@ -26,6 +26,7 @@ function App() {
     const [programClasses, setProgramClasses] = useState([]);
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState({});
+    const [isDrawerOpen, setIsDrawerOpen] = useState(true);
     
     useEffect(() => {
         const fetchPrograms = async () => {
@@ -51,6 +52,10 @@ function App() {
 
     //     return null;
     // }
+
+    const toggleDrawer = () => {
+        setIsDrawerOpen(prev => !prev);
+    };
 
     const handleDragEnd = (event) => {
         const { active, over } = event;
@@ -201,7 +206,7 @@ function App() {
 
     return (
         <>
-            <h1>Welcome {localStorage.getItem("userName")} </h1>
+            <h2>Welcome {localStorage.getItem("userName")} </h2>
             <div className={styles['InputGroup'] }>
                 {error && <p style={{ color: "red" }}>{error}</p>}
                 <select value={selectedProgram} onChange={handleProgramChange}>
@@ -239,8 +244,8 @@ function App() {
             </SemesterColumnContainer>
             </DndContext>
             <SaveButton onClick={handleSavePdf} />
-            <Drawer>
-                <h2>Available Classes for {selectedProgram}</h2>
+            <Drawer isOpen={isDrawerOpen} toggleDrawer={toggleDrawer}>
+                {/* <h2>Available Classes for {selectedProgram}</h2> */}
                 <div className="available-classes">
                     {programClasses.length > 0 ? (
                         programClasses.map((cls) => (
