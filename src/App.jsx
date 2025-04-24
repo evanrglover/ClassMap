@@ -195,10 +195,10 @@ function App() {
                     <p>Select a program to generate a curriculum plan</p>
                 )}
             </SemesterColumnContainer>
-            <SaveButton onClick={handleSavePdf} />
+           {/*  <SaveButton onClick={handleSavePdf} /> */}
             <Drawer>
                 <h2>Available Classes for {selectedProgram}</h2>
-                <div className="available-classes">
+                <div className={styles["available-classes"]}>
                     {programClasses.length > 0 ? (
                         availableDrawerClasses.map((cls) => (
                             <ClassCard
