@@ -302,15 +302,17 @@ function App() {
         });
     };
 
-    // Get all scheduled class names from the generated plan
-    const scheduledClassNames = new Set(
-        Object.values(data).flat().map(c => c.className)
-    );
-
-    // Filter the drawer classes to take out the ones in the schedule
-    const availableDrawerClasses = programClasses.filter(
-        cls => !scheduledClassNames.has(`${cls.department} ${cls.number}`)
-    );
+    useEffect(() => {
+        const scheduledClassNames = new Set(
+            Object.values(data).flat().map(c => c.className)
+        );
+    
+        const filtered = programClasses.filter(
+            cls => !scheduledClassNames.has(`${cls.department} ${cls.number}`)
+        );
+    
+        setAvailableDrawerClasses(filtered);
+    }, [data, programClasses]);
 
     return (
         <>
