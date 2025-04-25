@@ -14,7 +14,6 @@
     border-right: 5px solid green;
     border-radius: 10px;
     padding: 10px;
-
 }
 
 .drawerContent {
@@ -22,9 +21,14 @@
     overflow-y: auto;
 
     /* Grid layout for ClassCards */
-    display: grid;
+    /* display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 10px;
+    gap: 10px; */
+
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
 }
 
 .open {

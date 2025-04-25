@@ -13,7 +13,7 @@ import SemesterColumnContainer from './SemesterColumnContainer/SemesterColumn.js
 import SaveButton from './SaveButton/SaveButton.jsx';
 import html2pdf from 'html2pdf.js'; // Import html2pdf
 import { useNavigate, useParams } from 'react-router-dom';
-import { DndContext, closestCorners } from '@dnd-kit/core';
+import { DndContext, pointerWithin, rectIntersection } from '@dnd-kit/core';
 import { SortableContext, arrayMove } from '@dnd-kit/sortable';
 
 function App() {
@@ -53,10 +53,24 @@ function App() {
     //     return null;
     // }
 
+    const fetchProgramClasses = async (programId) => {
+        setLoading(true);
+        try {
+            //const response = await axios.get(`http://127.0.0.1:5000/getProgramClasses/${programId}`);
+            const response = await axios.get(`https://ClassMap.onrender.com/getProgramClasses/${programId}`);
+
+            setProgramClasses(response.data);
+        } catch (error) {
+            console.error("Error fetching program classes:", error);
+            setError("Failed to load classes for this program");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const toggleDrawer = () => {
         setIsDrawerOpen(prev => !prev);
     };
-
 
     const handleDragEnd = (event) => {
         const { active, over } = event;
@@ -97,57 +111,15 @@ function App() {
         if (targetSemester !== drawerId) updatedData[targetSemester] = targetItems;
     
         setData(updatedData);
-    };
-    
-    
-    // const handleDragEnd = (event) => {
-    //     const { active, over } = event;
-    
-    //     if (!over || active.id === over.id) return;
-    
-    //     const sourceSemester = Object.keys(data).find((semester) =>
-    //         data[semester].some((cls) => cls.id === active.id)
-    //     );
-    //     const targetSemester = over.id;
+    };    
 
-    //     if (!sourceSemester || !targetSemester) return;
-    
-    //     // Don't do anything if dragging into same column
-    //     if (sourceSemester === targetSemester) return;
-    
-    //     const sourceItems = [...data[sourceSemester]];
-    //     const targetItems = [...data[targetSemester]];
-    
-    //     // Prevent duplicates
-    //     if (targetItems.some((cls) => cls.id === active.id)) return;
-    
-    //     const movedItemIndex = sourceItems.findIndex((cls) => cls.id === active.id);
-    //     if (movedItemIndex === -1) return;
-    
-    //     const [movedItem] = sourceItems.splice(movedItemIndex, 1);
-    //     targetItems.push(movedItem);
-    
-    //     setData({
-    //         ...data,
-    //         [sourceSemester]: sourceItems,
-    //         [targetSemester]: targetItems,
-    //     });
-    // };
-
-    const fetchProgramClasses = async (programId) => {
-        setLoading(true);
-        try {
-            //const response = await axios.get(`http://127.0.0.1:5000/getProgramClasses/${programId}`);
-            const response = await axios.get(`https://ClassMap.onrender.com/getProgramClasses/${programId}`);
-
-            setProgramClasses(response.data);
-        } catch (error) {
-            console.error("Error fetching program classes:", error);
-            setError("Failed to load classes for this program");
-        } finally {
-            setLoading(false);
+    function customCollisionDetectionAlgorithm(args) {
+        const pointerCollisions = pointerWithin(args);
+        if (pointerCollisions.length > 0) {
+          return pointerCollisions;
         }
-    };
+        return rectIntersection(args);
+      }
 
     const generatePlan = async (programId) => {
         try {
@@ -281,7 +253,7 @@ function App() {
                 {loading && <p>Loading classes...</p>}
             </div>
 
-            <DndContext collisionDetection={closestCorners} onDragStart={(event) => {
+            <DndContext collisionDetection={customCollisionDetectionAlgorithm} onDragStart={(event) => {
                 // console.log('Dragging item:', event.active.id); // Log the ID of the dragged item
             }}
             onDragEnd={handleDragEnd}

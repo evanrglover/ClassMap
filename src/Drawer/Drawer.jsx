@@ -6,12 +6,12 @@ function Drawer({ children, isOpen = true, toggleDrawer }) {
     const { isOver, setNodeRef } = useDroppable({ id: 'drawer' });
 
     return (
-        <div className={`${styles.Drawer} ${isOpen ? styles.open : styles.closed}`}>
+        <div ref={setNodeRef} className={`${styles.Drawer} ${isOpen ? styles.open : styles.closed}`}>
             <p>Available Classes</p>
             <button className={styles.toggleButton} onClick={toggleDrawer}>
                 {isOpen ? "Hide Drawer" : "Show Drawer"}
             </button>
-            <div ref={setNodeRef} className={styles.drawerContent}>
+            <div className={styles.drawerContent}>
                 {children}
             </div>
         </div>
