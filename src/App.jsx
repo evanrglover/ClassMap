@@ -166,11 +166,21 @@ function App() {
     const fetchProgramClasses = async (programId) => {
         setLoading(true);
         try {
+            console.log(`Fetching classes for program ID: ${programId}`);
             const response = await axios.get(`${API_BASE_URL}/getProgramClasses/${programId}`);
-            setProgramClasses(response.data);
+            console.log("Program classes response:", response.data);
             
-            // Also fetch the drawer classes
-            fetchAvailableDrawerClasses(programId);
+            // Process the classes to ensure consistent format
+            const formattedClasses = response.data.map(cls => ({
+                ...cls,
+                className: `${cls.department} ${cls.number}`,
+                description: cls.title
+            }));
+            
+            setProgramClasses(formattedClasses);
+            
+            // Directly set the drawer classes since we haven't generated a plan yet
+            setAvailableDrawerClasses(formattedClasses);
         } catch (error) {
             console.error("Error fetching program classes:", error);
             setError("Failed to load classes for this program");
@@ -180,6 +190,7 @@ function App() {
     };
     
     const fetchAvailableDrawerClasses = async (programId) => {
+        // This function is only used after a plan is generated
         try {
             // Set up headers with token if available
             const config = {};
@@ -190,7 +201,19 @@ function App() {
             }
             
             const response = await axios.get(`${API_BASE_URL}/getAvailableDrawerClasses/${programId}`, config);
-            setAvailableDrawerClasses(response.data);
+            console.log("Available drawer classes response:", response.data);
+            
+            // Format the drawer classes to ensure consistency
+            const formattedDrawerClasses = response.data.map(cls => {
+                // Handle both formats from the two different endpoints
+                return {
+                    ...cls,
+                    className: cls.className || `${cls.department} ${cls.number}`,
+                    description: cls.description || cls.title
+                };
+            });
+            
+            setAvailableDrawerClasses(formattedDrawerClasses);
         } catch (error) {
             console.error("Error fetching available drawer classes:", error);
             // Don't set error state here as this might be called before the drawer is populated
@@ -241,6 +264,16 @@ function App() {
         }
     };
 
+    const handleGenerateClick = () => {
+        if (selectedProgramId) {
+            setLoading(true);
+            generatePlan(selectedProgramId)
+                .finally(() => setLoading(false));
+        } else {
+            setError("Please select a program first");
+        }
+    };
+
     const containerRef = useRef(null);
 
     const handleSavePdf = () => {
@@ -262,18 +295,20 @@ function App() {
     const handleProgramChange = (e) => {
         const programName = e.target.value;
         setSelectedProgram(programName);
+        setData({}); // Clear any existing schedule data
         
         // Find the selected program ID
         const selectedProgramObj = programs.find(p => p.programname === programName);
         if (selectedProgramObj) {
             const programId = selectedProgramObj.programid;
             setSelectedProgramId(programId);
+            
+            // Only fetch the classes to populate the drawer, don't generate plan automatically
             fetchProgramClasses(programId);
-            generatePlan(programId);
         } else {
             setProgramClasses([]);
             setAvailableDrawerClasses([]);
-            setData({});
+            setSelectedProgramId("");
         }
         
         console.log("Selected program:", programName);
@@ -302,17 +337,9 @@ function App() {
         });
     };
 
-    useEffect(() => {
-        const scheduledClassNames = new Set(
-            Object.values(data).flat().map(c => c.className)
-        );
-    
-        const filtered = programClasses.filter(
-            cls => !scheduledClassNames.has(`${cls.department} ${cls.number}`)
-        );
-    
-        setAvailableDrawerClasses(filtered);
-    }, [data, programClasses]);
+    // We don't need this useEffect since we only update availableDrawerClasses
+    // after a plan is generated via the fetchAvailableDrawerClasses function
+    // Removing this effect since it was overriding the drawer classes
 
     return (
         <>
@@ -327,7 +354,23 @@ function App() {
                         </option>
                     ))}
                 </select>
+                <button 
+                    onClick={handleGenerateClick}
+                    disabled={!selectedProgramId || loading}
+                    className={styles['GenerateButton']}
+                >
+                    {loading ? "Generating..." : "Generate Schedule"}
+                </button>
                 {loading && <p>Loading classes...</p>}
+            </div>
+            <div className={styles['ButtonGroup']}>
+                <button 
+                    onClick={handleSavePdf} 
+                    className={styles['SaveButton']}
+                    disabled={Object.keys(data).length === 0}
+                >
+                    Save as PDF
+                </button>
             </div>
             <SemesterColumnContainer className="SemesterColumnContainer" ref={containerRef}>
                 {Object.entries(data).length > 0 ? (
@@ -341,31 +384,31 @@ function App() {
                                     key={index}
                                     ClassName={c.className}
                                     ClassDescription={c.description}
+                                    onRemove={() => handleRemoveFromSemester(semester, c.className || c.id)}
                                 />
                             ))}
                         />
                     ))
                 ) : (
-                    <p>Select a program to generate a curriculum plan</p>
+                    <p>Click "Generate Schedule" to create a curriculum plan</p>
                 )}
             </SemesterColumnContainer>
-           {/*  <SaveButton onClick={handleSavePdf} /> */}
             <Drawer>
                 <h2>Available Classes for {selectedProgram}</h2>
                 <div className={styles["available-classes"]}>
-                    {programClasses.length > 0 ? (
+                    {availableDrawerClasses.length > 0 ? (
                         availableDrawerClasses.map((cls) => (
                             <ClassCard
-                                key={cls.classid}
-                                ClassName={`${cls.department} ${cls.number}`}
-                                ClassDescription={cls.title}
+                                key={cls.classid || cls.className}
+                                ClassName={cls.className || `${cls.department} ${cls.number}`}
+                                ClassDescription={cls.description || cls.title}
                                 Credits={cls.credits}
                                 Semesters={Array.isArray(cls.semesters) ? cls.semesters.join(', ') : ''}
-                                PreReqs={cls.prerequisites.join(', ')}
+                                PreReqs={Array.isArray(cls.prerequisites) ? cls.prerequisites.join(', ') : ''}
                             />
                         ))
                     ) : (
-                        <p>{selectedProgram ? "No classes found for this program" : "Select a program to view available classes"}</p>
+                        <p>{selectedProgram ? "Loading classes..." : "Select a program to view available classes"}</p>
                     )}
                 </div>
             </Drawer>
