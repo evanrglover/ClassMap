@@ -302,6 +302,16 @@ function App() {
         });
     };
 
+    // Get all scheduled class names from the generated plan
+    const scheduledClassNames = new Set(
+        Object.values(data).flat().map(c => c.className)
+    );
+
+    // Filter the drawer classes to take out the ones in the schedule
+    const availableDrawerClasses = programClasses.filter(
+        cls => !scheduledClassNames.has(`${cls.department} ${cls.number}`)
+    );
+
     return (
         <>
             <h1>Welcome {localStorage.getItem("userName")} </h1>
@@ -317,55 +327,46 @@ function App() {
                 </select>
                 {loading && <p>Loading classes...</p>}
             </div>
-
-            <DndContext collisionDetection={closestCorners} onDragEnd={handleDragEnd}>
-                <SemesterColumnContainer className="SemesterColumnContainer" ref={containerRef}>
-                    {Object.entries(data).length > 0 ? (
-                        // Sort the semesters chronologically before mapping
-                        sortSemesters(Object.keys(data)).map((semester) => (
-                            <SemesterColumn
-                                key={semester}
-                                id={`semester-${semester}`} // Add ID for drop target
-                                SemesterName={semester}
-                                ClassCards={data[semester].map((c, index) => (
-                                    <ClassCard
-                                        key={c.id || c.className}
-                                        id={c.id || c.className}
-                                        ClassName={c.className}
-                                        ClassDescription={c.description}
-                                        onRemove={() => handleRemoveFromSemester(semester, c.id || c.className)}
-                                    />
-                                ))}
+            <SemesterColumnContainer className="SemesterColumnContainer" ref={containerRef}>
+                {Object.entries(data).length > 0 ? (
+                    // Sort the semesters chronologically before mapping
+                    sortSemesters(Object.keys(data)).map((semester) => (
+                        <SemesterColumn
+                            key={semester}
+                            SemesterName={semester}
+                            ClassCards={data[semester].map((c, index) => (
+                                <ClassCard
+                                    key={index}
+                                    ClassName={c.className}
+                                    ClassDescription={c.description}
+                                />
+                            ))}
+                        />
+                    ))
+                ) : (
+                    <p>Select a program to generate a curriculum plan</p>
+                )}
+            </SemesterColumnContainer>
+           {/*  <SaveButton onClick={handleSavePdf} /> */}
+            <Drawer>
+                <h2>Available Classes for {selectedProgram}</h2>
+                <div className={styles["available-classes"]}>
+                    {programClasses.length > 0 ? (
+                        availableDrawerClasses.map((cls) => (
+                            <ClassCard
+                                key={cls.classid}
+                                ClassName={`${cls.department} ${cls.number}`}
+                                ClassDescription={cls.title}
+                                Credits={cls.credits}
+                                Semesters={Array.isArray(cls.semesters) ? cls.semesters.join(', ') : ''}
+                                PreReqs={cls.prerequisites.join(', ')}
                             />
                         ))
                     ) : (
-                        <p>Select a program to generate a curriculum plan</p>
+                        <p>{selectedProgram ? "No classes found for this program" : "Select a program to view available classes"}</p>
                     )}
-                </SemesterColumnContainer>
-                
-                <Drawer>
-                    <h2>Available Classes for {selectedProgram}</h2>
-                    <div className="available-classes">
-                        {availableDrawerClasses.length > 0 ? (
-                            availableDrawerClasses.map((cls) => (
-                                <ClassCard
-                                    key={cls.className}
-                                    id={`drawer-${cls.className}`} // Prefix with 'drawer-' to distinguish from semester items
-                                    ClassName={cls.className}
-                                    ClassDescription={cls.description}
-                                    Credits={cls.credits}
-                                    Semesters={Array.isArray(cls.semesters) ? cls.semesters.join(', ') : ''}
-                                    PreReqs={Array.isArray(cls.prerequisites) ? cls.prerequisites.join(', ') : ''}
-                                    isDraggable={true}
-                                />
-                            ))
-                        ) : (
-                            <p>{selectedProgram ? "No additional classes available" : "Select a program to view available classes"}</p>
-                        )}
-                    </div>
-                </Drawer>
-            </DndContext>
-            <SaveButton onClick={handleSavePdf} />
+                </div>
+            </Drawer>
         </>
     );
 }

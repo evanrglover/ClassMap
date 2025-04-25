@@ -18,8 +18,9 @@ html, body{
   background-color: #00843d;
   padding: 1%;
 
-
+  position: relative;
   width: 100%;
+  overflow-y: hidden;
 }
 @keyframes logo-spin {
   from {
@@ -47,6 +48,7 @@ html, body{
 h1{
   text-align: left;
   padding: 1%;
+  font-size: 2rem;
 }
 
 root select{
