@@ -306,6 +306,7 @@ function App() {
                     </Drawer>
                 </SortableContext>
             </DndContext>
+            <div class="spacer"></div>
         </>
     );
 }

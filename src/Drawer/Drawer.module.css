@@ -19,16 +19,7 @@
 .drawerContent {
     height: 100%;
     overflow-y: auto;
-
-    /* Grid layout for ClassCards */
-    /* display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 10px; */
-
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    width: 100%;
+    /* Note: if you are trying to fix display of courseCards in the drawer, go to index.css>.available-classes */
 }
 
 .open {

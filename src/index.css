@@ -66,3 +66,14 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+.spacer {
+  height: 300px;
+}
+
+.available-classes {
+  overflow-y: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+}
