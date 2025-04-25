@@ -4,10 +4,7 @@ import { useDroppable } from "@dnd-kit/core";
 import { SortableContext } from "@dnd-kit/sortable";
 
 function SemesterColumn({SemesterName, ClassCards}){
-
-    const { setNodeRef } = useDroppable({
-        id: SemesterName
-    });
+    const { setNodeRef } = useDroppable({ id: SemesterName });
 
     return(
         <>
