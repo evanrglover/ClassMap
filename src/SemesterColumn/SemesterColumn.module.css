@@ -7,10 +7,13 @@
     width: 12%;
     align-items: center;
     background: white;
+    /* Come back to see if overflow is interfering with d&d */
+    overflow-y: auto;
+    scrollbar-width: none;
 }
 h2{
     color: black;
-    font-size: 1.5rem;
+    font-size: 1rem;
     font-family: Arial, Helvetica, sans-serif;
     margin: 1%;
 }

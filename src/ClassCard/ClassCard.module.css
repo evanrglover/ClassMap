@@ -12,7 +12,7 @@
     --POSTREQ-BORDER-COLOR: rgb(121, 30, 148);
 
     /* Dimmensions */
-    --CARD-WIDTH: 90%;
+    --CARD-WIDTH: min(90%, 9vw);
     --CARD-HEIGHT: auto;
     --CARD-BORDER-RADIUS: 5px;
     --CARD-BORDER-STYLE: solid;
@@ -35,11 +35,11 @@
 
     /* Dimmensions */
     width: var(--CARD-WIDTH);
-    height: var(--CARD-HEIGHT);
     border-radius: var(--CARD-BORDER-RADIUS);
     border-color: var(--PREREQ-BORDER-COLOR);
     border-style: var(--CARD-BORDER-STYLE);
     border-width: var(--CARD-BORDER-WIDTH);
+    flex-shrink: 0;
     border: none;  /*  Setting border to none for now. I'll fix once I learn Redux -Tyler H*/
 
     /* Padding and Margins */
@@ -51,7 +51,8 @@
     font-size: var(--CARD-FONT-SIZE);
 
     /* Alignment */
-    margin: 1% auto;
+    margin: 1%;
+    box-sizing: border-box;
 
     /* Animation */
     /* transition: transform .2s;  */
@@ -83,5 +84,3 @@
     font-size: 0.9rem;
     font-weight: bold;
 }
-
-
