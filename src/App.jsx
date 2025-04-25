@@ -23,44 +23,78 @@ function App() {
     const navigate = useNavigate();
     const [programs, setPrograms] = useState([]);
     const [selectedProgram, setSelectedProgram] = useState("");
+    const [selectedProgramId, setSelectedProgramId] = useState("");
     const [programClasses, setProgramClasses] = useState([]);
+    const [availableDrawerClasses, setAvailableDrawerClasses] = useState([]);
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState({});
+    
+    // API base URL - change as needed
+    const API_BASE_URL = "http://127.0.0.1:5000";
+    // const API_BASE_URL = "https://ClassMap.onrender.com";
     
     useEffect(() => {
         const fetchPrograms = async () => {
             try {
-                console.log("hello");
-                // const response = await axios.get("https://ClassMap.onrender.com/getPrograms");
-                const response = await axios.get("http://127.0.0.1:5000/getPrograms");
-                console.log("world");
+                console.log("Fetching programs...");
+                const response = await axios.get(`${API_BASE_URL}/getPrograms`);
                 console.log("API response:", response.data);
                 setPrograms(response.data);
             } catch (error) {
                 console.error("Error fetching programs:", error);
+                setError("Failed to load programs");
             }
         };
 
         fetchPrograms();
     }, []);
     
-
-    // const getUserInfo = async() => {
-    //     //const response = await axios.get("https://127.0.0.1:5000/getPrograms", {});
-    //     const response = await axios.get("https://ClassMap.onrender.com/getPrograms", {});
-
-    //     return null;
-    // }
-
     const handleDragEnd = (event) => {
         const { active, over } = event;
     
         if (!over || active.id === over.id) return;
     
+        // Check if we're dragging from drawer to semester
+        if (active.id.startsWith('drawer-') && over.id.startsWith('semester-')) {
+            // Extract the real class ID and semester ID
+            const classId = active.id.replace('drawer-', '');
+            const targetSemester = over.id.replace('semester-', '');
+            
+            // Find the class in the drawer
+            const classObj = availableDrawerClasses.find(c => c.className === classId);
+            if (!classObj) return;
+            
+            // Add to semester
+            const targetItems = [...(data[targetSemester] || [])];
+            
+            // Prevent duplicates
+            if (targetItems.some(cls => cls.className === classId)) return;
+            
+            // Add class to semester
+            targetItems.push({
+                ...classObj,
+                id: classId  // Ensure it has an ID for dragging
+            });
+            
+            // Update data state
+            setData({
+                ...data,
+                [targetSemester]: targetItems
+            });
+            
+            // Remove from available drawer classes
+            setAvailableDrawerClasses(prev => 
+                prev.filter(c => c.className !== classId)
+            );
+            
+            return;
+        }
+        
+        // Handle movement between semesters
         const sourceSemester = Object.keys(data).find((semester) =>
-            data[semester].some((cls) => cls.id === active.id)
+            data[semester].some((cls) => cls.id === active.id || cls.className === active.id)
         );
-        const targetSemester = over.id;
+        const targetSemester = over.id.replace('semester-', '');
     
         if (!sourceSemester || !targetSemester) return;
     
@@ -68,15 +102,24 @@ function App() {
         if (sourceSemester === targetSemester) return;
     
         const sourceItems = [...data[sourceSemester]];
-        const targetItems = [...data[targetSemester]];
+        const targetItems = [...(data[targetSemester] || [])];
     
-        // Prevent duplicates
-        if (targetItems.some((cls) => cls.id === active.id)) return;
-    
-        const movedItemIndex = sourceItems.findIndex((cls) => cls.id === active.id);
+        // Find the moved item
+        const movedItemIndex = sourceItems.findIndex(
+            (cls) => cls.id === active.id || cls.className === active.id
+        );
         if (movedItemIndex === -1) return;
     
         const [movedItem] = sourceItems.splice(movedItemIndex, 1);
+        
+        // Prevent duplicates
+        if (targetItems.some(cls => 
+            cls.id === movedItem.id || 
+            cls.className === movedItem.className ||
+            cls.id === movedItem.className || 
+            cls.className === movedItem.id
+        )) return;
+        
         targetItems.push(movedItem);
     
         setData({
@@ -86,13 +129,48 @@ function App() {
         });
     };
 
+    // Handle removing a class from semester back to drawer
+    const handleRemoveFromSemester = (semesterName, classId) => {
+        // Make sure the semester exists
+        if (!data[semesterName]) return;
+        
+        // Find the class in the semester
+        const classIndex = data[semesterName].findIndex(
+            c => c.id === classId || c.className === classId
+        );
+        if (classIndex === -1) return;
+        
+        // Get class object
+        const classObj = data[semesterName][classIndex];
+        
+        // Remove from semester
+        const updatedSemester = [...data[semesterName]];
+        updatedSemester.splice(classIndex, 1);
+        
+        // Update data state
+        setData({
+            ...data,
+            [semesterName]: updatedSemester
+        });
+        
+        // Add back to drawer if not already there
+        const isInDrawer = availableDrawerClasses.some(
+            c => c.className === classId || c.className === classObj.className
+        );
+        
+        if (!isInDrawer) {
+            setAvailableDrawerClasses(prev => [...prev, classObj]);
+        }
+    };
+
     const fetchProgramClasses = async (programId) => {
         setLoading(true);
         try {
-            const response = await axios.get(`http://127.0.0.1:5000/getProgramClasses/${programId}`);
-            // const response = await axios.get(`https://ClassMap.onrender.com/getProgramClasses/${programId}`);
-
+            const response = await axios.get(`${API_BASE_URL}/getProgramClasses/${programId}`);
             setProgramClasses(response.data);
+            
+            // Also fetch the drawer classes
+            fetchAvailableDrawerClasses(programId);
         } catch (error) {
             console.error("Error fetching program classes:", error);
             setError("Failed to load classes for this program");
@@ -100,41 +178,62 @@ function App() {
             setLoading(false);
         }
     };
+    
+    const fetchAvailableDrawerClasses = async (programId) => {
+        try {
+            // Set up headers with token if available
+            const config = {};
+            if (token) {
+                config.headers = {
+                    Authorization: `Bearer ${token}`
+                };
+            }
+            
+            const response = await axios.get(`${API_BASE_URL}/getAvailableDrawerClasses/${programId}`, config);
+            setAvailableDrawerClasses(response.data);
+        } catch (error) {
+            console.error("Error fetching available drawer classes:", error);
+            // Don't set error state here as this might be called before the drawer is populated
+        }
+    };
 
     const generatePlan = async (programId) => {
         try {
+            // Set up headers with token if available
+            const config = {};
+            if (token) {
+                config.headers = {
+                    Authorization: `Bearer ${token}`
+                };
+            }
+            
             const response = await axios.post(
-                `http://127.0.0.1:5000/generatePlan/${programId}`,
+                `${API_BASE_URL}/generatePlan/${programId}`,
                 {
                     startSemester: "Spring", 
                     startYear: 2025
-                }
+                },
+                config
             );
-        //     const response = await axios.post(
-        //         `https://ClassMap.onrender.com/generatePlan/${programId}`,
-        //         {
-        //             startSemester: "Spring", 
-        //             startYear: 2025
-        //         }
-        // );
-
             
             console.log("Generated plan:", response.data);
             const newData = {};
             Object.entries(response.data).forEach(([semester, classes]) => {
                 newData[semester] = classes.map((cls) => ({
                     ...cls,
-                    id: `${cls.className}` // Ensure unique ID
+                    id: cls.className // Ensure unique ID
                 }));
                 console.log(`Assigning IDs for semester ${semester}:`);
                 classes.forEach((cls) => {
-                console.log(` -> ${cls.className}`);
-            });
+                    console.log(` -> ${cls.className}`);
+                });
             });
             
-
             setData(newData);
             console.log("Program classes:", response.data);
+            
+            // After generating the plan, fetch the updated available drawer classes
+            fetchAvailableDrawerClasses(programId);
 
         } catch (error) {
             console.error("Error generating plan:", error);
@@ -167,10 +266,14 @@ function App() {
         // Find the selected program ID
         const selectedProgramObj = programs.find(p => p.programname === programName);
         if (selectedProgramObj) {
-            fetchProgramClasses(selectedProgramObj.programid);
-            generatePlan(selectedProgramObj.programid);
+            const programId = selectedProgramObj.programid;
+            setSelectedProgramId(programId);
+            fetchProgramClasses(programId);
+            generatePlan(programId);
         } else {
             setProgramClasses([]);
+            setAvailableDrawerClasses([]);
+            setData({});
         }
         
         console.log("Selected program:", programName);
@@ -222,13 +325,15 @@ function App() {
                         sortSemesters(Object.keys(data)).map((semester) => (
                             <SemesterColumn
                                 key={semester}
+                                id={`semester-${semester}`} // Add ID for drop target
                                 SemesterName={semester}
                                 ClassCards={data[semester].map((c, index) => (
                                     <ClassCard
-                                        key={c.id}
-                                        id={c.id}
+                                        key={c.id || c.className}
+                                        id={c.id || c.className}
                                         ClassName={c.className}
                                         ClassDescription={c.description}
+                                        onRemove={() => handleRemoveFromSemester(semester, c.id || c.className)}
                                     />
                                 ))}
                             />
@@ -236,29 +341,31 @@ function App() {
                     ) : (
                         <p>Select a program to generate a curriculum plan</p>
                     )}
-            </SemesterColumnContainer>
+                </SemesterColumnContainer>
+                
+                <Drawer>
+                    <h2>Available Classes for {selectedProgram}</h2>
+                    <div className="available-classes">
+                        {availableDrawerClasses.length > 0 ? (
+                            availableDrawerClasses.map((cls) => (
+                                <ClassCard
+                                    key={cls.className}
+                                    id={`drawer-${cls.className}`} // Prefix with 'drawer-' to distinguish from semester items
+                                    ClassName={cls.className}
+                                    ClassDescription={cls.description}
+                                    Credits={cls.credits}
+                                    Semesters={Array.isArray(cls.semesters) ? cls.semesters.join(', ') : ''}
+                                    PreReqs={Array.isArray(cls.prerequisites) ? cls.prerequisites.join(', ') : ''}
+                                    isDraggable={true}
+                                />
+                            ))
+                        ) : (
+                            <p>{selectedProgram ? "No additional classes available" : "Select a program to view available classes"}</p>
+                        )}
+                    </div>
+                </Drawer>
             </DndContext>
             <SaveButton onClick={handleSavePdf} />
-            <Drawer>
-                <h2>Available Classes for {selectedProgram}</h2>
-                <div className="available-classes">
-                    {programClasses.length > 0 ? (
-                        programClasses.map((cls) => (
-                            <ClassCard
-                                key={cls.classid}
-                                id={cls.classid}
-                                ClassName={`${cls.department} ${cls.number}`}
-                                ClassDescription={cls.title}
-                                Credits={cls.credits}
-                                Semesters={Array.isArray(cls.semesters) ? cls.semesters.join(', ') : ''}
-                                PreReqs={cls.prerequisites.join(', ')}
-                            />
-                        ))
-                    ) : (
-                        <p>{selectedProgram ? "No classes found for this program" : "Select a program to view available classes"}</p>
-                    )}
-                </div>
-            </Drawer>
         </>
     );
 }

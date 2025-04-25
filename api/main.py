@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, session
 from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, jwt_required, JWTManager
@@ -8,10 +8,12 @@ from ClassInfo import ClassInfo
 from CurriculumPlanner import CurriculumPlanner
 from Schedule import Schedule
 
+# Create a global schedule object that will persist between requests
+global_schedules = {}  # Dictionary to store schedules per user/program
+
 # flask app
 app = Flask(__name__)
 # CORS app for handling requests from different domains
-#CORS(app, supports_credentials=True)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 # Used for hashing passwords
@@ -30,9 +32,25 @@ def get_db_connection():
         host="localhost"
     )
 # def get_db_connection():
-
 #     DATABASE_URL = os.environ.get("DATABASE")  # Render sets this automatically
 #     return psycopg2.connect(DATABASE_URL)
+
+# Helper function to get user ID from JWT token
+def get_user_id_from_request():
+    user_id = None
+    auth_header = request.headers.get('Authorization')
+    if auth_header and auth_header.startswith('Bearer '):
+        # Extract user ID from JWT token
+        from flask_jwt_extended import decode_token
+        token = auth_header.split(' ')[1]
+        try:
+            decoded = decode_token(token)
+            user_id = str(decoded['sub'].get('UserID', 'anonymous'))
+        except:
+            user_id = 'anonymous'
+    else:
+        user_id = 'anonymous'
+    return user_id
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -49,6 +67,11 @@ def login():
         user_name = f"{user[2]} {user[3]}"
         # Create token with user ID in the identity
         access_token = create_access_token(identity={"UserID": user_id, "email": email, "name": user_name})
+        
+        # Initialize a schedule for this user
+        if str(user_id) not in global_schedules:
+            global_schedules[str(user_id)] = {}
+        
         # Return both token and user information
         return jsonify({
             "access_token": access_token,
@@ -130,14 +153,12 @@ def getProgramClasses(program_id):
                 "requires_matriculation": requires_matriculation
             })
         
-        
         cur.close()
         conn.close()
         return jsonify(class_data), 200
     
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
 
 # uses the algorithm to generate a schedule that fits the prerequisites and semesters available and stuff
 @app.route("/generatePlan/<program_id>", methods=["POST"])
@@ -146,6 +167,12 @@ def generate_curriculum_plan(program_id):
         data = request.get_json()
         start_semester = data.get("startSemester", "Spring")
         start_year = data.get("startYear", 2025)
+        
+        # Get user ID from token
+        user_id = get_user_id_from_request()
+            
+        # Create key for this user+program combination
+        schedule_key = f"{user_id}_{program_id}"
         
         # Get all classes for the program
         conn = get_db_connection()
@@ -165,7 +192,11 @@ def generate_curriculum_plan(program_id):
         
         classes = cur.fetchall()
         
-        # Create ClassInfo objects
+        # Initialize a new Schedule object
+        global_schedules[schedule_key] = Schedule()
+        schedule = global_schedules[schedule_key]
+        
+        # Create ClassInfo objects and add to drawer
         class_info_objects = []
         for cls in classes:
             class_id, department, number, title, credits, requires_matriculation, semesters = cls
@@ -177,22 +208,10 @@ def generate_curriculum_plan(program_id):
                 JOIN course p ON pr.prereqid = p.courseid
                 WHERE pr.courseid = %s
             """, (class_id,))
-
             
             prerequisites = cur.fetchall()
             prereq_list = [f"{p[0]} {p[1]}" for p in prerequisites]
             
-            # # Get semesters when the course is offered
-            # cur.execute("""
-            #     SELECT SemestersAvailable
-            #     FROM course
-            #     WHERE courseid = %s
-            # """, (class_id,))
-
-
-            
-            # semesters_data = cur.fetchall()
-            # semesters = [s[0].lower() for s in semesters_data] if semesters_data else ['fall', 'spring']
             if isinstance(semesters, str):
                 semesters = semesters.strip('{}').split(',')
             semesters = [s.lower() for s in semesters] if semesters else ['fall', 'spring']
@@ -207,21 +226,24 @@ def generate_curriculum_plan(program_id):
                 requires_matriculation=requires_matriculation,
             )
             
+            # Add to both collections
             class_info_objects.append(class_info_obj)
+            schedule.add_to_drawer(class_info_obj)
         
         # Create planner and add classes
-        planner = CurriculumPlanner(start_semester="Fall", start_year=start_year)
+        planner = CurriculumPlanner(start_semester=start_semester, start_year=start_year)
         for course in class_info_objects:
             print(course.semesters)
             planner.add_class(course)
-
         
         # Generate plan
         semester_plan = planner.plan_curriculum()
         print(semester_plan)
         
-        # Format plan for frontend
+        # Format plan for frontend and update schedule
         formatted_plan = {}
+        scheduled_classes = set()  # Keep track of scheduled classes
+        
         for semester_num, courses in semester_plan.items():
             if courses:  # Only include semesters with courses
                 semester_name = planner.get_semester_name(semester_num)
@@ -238,6 +260,15 @@ def generate_curriculum_plan(program_id):
                             "requiresMatriculation": course_obj.requires_matriculation,
                             "semesters": course_obj.semesters
                         })
+                        
+                        # Add to the semester in the schedule
+                        schedule.add_to_semester(semester_name, course_obj)
+                        scheduled_classes.add(course_name)  # Mark as scheduled
+        
+        # Now remove scheduled classes from drawer
+        # We need to implement this functionality in Schedule class
+        # For now, we'll track what's scheduled separately
+        schedule.scheduled_classes = scheduled_classes
         
         cur.close()
         conn.close()
@@ -247,7 +278,49 @@ def generate_curriculum_plan(program_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-
+# Modified endpoint to get classes from drawer that aren't in any semester
+@app.route("/getAvailableDrawerClasses/<program_id>", methods=["GET"])
+def get_available_drawer_classes(program_id):
+    try:
+        # Get user ID from token
+        user_id = get_user_id_from_request()
+            
+        # Create key for this user+program combination
+        schedule_key = f"{user_id}_{program_id}"
+        
+        # Check if we have a schedule for this user+program
+        if schedule_key not in global_schedules:
+            # If no schedule exists yet, return all program classes
+            return getProgramClasses(program_id)
+        
+        schedule = global_schedules[schedule_key]
+        
+        # Create a set of all class names that are in semesters
+        scheduled_class_names = getattr(schedule, 'scheduled_classes', set())
+        if not scheduled_class_names:
+            scheduled_class_names = set()
+            for semester, classes in schedule.semesters.items():
+                for class_info in classes:
+                    scheduled_class_names.add(class_info.name)
+            # Store for future reference
+            schedule.scheduled_classes = scheduled_class_names
+        
+        # Get classes from the drawer that aren't scheduled
+        available_classes = []
+        for class_info in schedule.drawer:
+            if class_info.name not in scheduled_class_names:
+                available_classes.append({
+                    "className": class_info.name,
+                    "description": class_info.title,
+                    "prerequisites": class_info.prerequisites,
+                    "requiresMatriculation": class_info.requires_matriculation,
+                    "semesters": class_info.semesters
+                })
+        
+        return jsonify(available_classes), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 # port configuration
 port = int(os.environ.get("PORT", 5000))
