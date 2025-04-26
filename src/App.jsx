@@ -29,6 +29,11 @@ function App() {
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState({});
     
+    // New state for schedules
+    const [schedules, setSchedules] = useState([]);
+    const [selectedSchedule, setSelectedSchedule] = useState("");
+    const [selectedScheduleId, setSelectedScheduleId] = useState("");
+    
     // API base URL - change as needed
     const API_BASE_URL = "http://127.0.0.1:5000";
     // const API_BASE_URL = "https://ClassMap.onrender.com";
@@ -47,6 +52,22 @@ function App() {
         };
 
         fetchPrograms();
+        
+        // Fetch existing schedules for this user
+        const fetchSchedules = async () => {
+            const userId = localStorage.getItem('userId');
+            if (userId) {
+                try {
+                    const response = await axios.get(`${API_BASE_URL}/getSchedules/${userId}`);
+                    console.log("Schedules response:", response.data);
+                    setSchedules(response.data);
+                } catch (error) {
+                    console.error("Error fetching schedules:", error);
+                }
+            }
+        };
+        
+        fetchSchedules();
     }, []);
     
     const handleDragEnd = (event) => {
@@ -264,6 +285,34 @@ function App() {
         }
     };
 
+    // New function to load schedule from saved schedule
+    const loadSchedule = async (scheduleId) => {
+        setLoading(true);
+        try {
+            console.log(`Loading schedule ID: ${scheduleId}`);
+            const response = await axios.get(`${API_BASE_URL}/getScheduleClasses/${scheduleId}`);
+            console.log("Schedule classes response:", response.data);
+            
+            // Set the data directly from the response
+            setData(response.data);
+            
+            // Find program ID for this schedule to update available drawer classes
+            const schedule = schedules.find(s => s.scheduleId === scheduleId);
+            if (schedule) {
+                setSelectedProgramId(schedule.programId);
+                setSelectedProgram(schedule.programName);
+                
+                // Fetch available drawer classes for this program
+                fetchAvailableDrawerClasses(schedule.programId);
+            }
+        } catch (error) {
+            console.error("Error loading schedule:", error);
+            setError("Failed to load schedule");
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleGenerateClick = () => {
         if (selectedProgramId) {
             setLoading(true);
@@ -276,7 +325,8 @@ function App() {
 
     const containerRef = useRef(null);
 
-    const handleSavePdf = () => {
+    const handleSavePdf = async() => {
+        const response = await axios.get(`${API_BASE_URL}/saveSchedule/${programId}`, {});
         if (containerRef.current) {
             const opt = {
                 margin: 1,
@@ -297,6 +347,10 @@ function App() {
         setSelectedProgram(programName);
         setData({}); // Clear any existing schedule data
         
+        // Reset schedule selection
+        setSelectedSchedule("");
+        setSelectedScheduleId("");
+        
         // Find the selected program ID
         const selectedProgramObj = programs.find(p => p.programname === programName);
         if (selectedProgramObj) {
@@ -312,6 +366,27 @@ function App() {
         }
         
         console.log("Selected program:", programName);
+    };
+    
+    // Handle schedule selection change
+    const handleScheduleChange = (e) => {
+        const scheduleId = e.target.value;
+        setSelectedScheduleId(scheduleId);
+        
+        if (scheduleId) {
+            // Find the schedule object
+            const schedule = schedules.find(s => s.scheduleId.toString() === scheduleId);
+            if (schedule) {
+                setSelectedSchedule(schedule.scheduleName);
+                
+                // Load the schedule
+                loadSchedule(scheduleId);
+            }
+        } else {
+            // Clear the current data if no schedule is selected
+            setSelectedSchedule("");
+            setData({});
+        }
     };
 
     // Helper function to sort semesters chronologically
@@ -337,15 +412,13 @@ function App() {
         });
     };
 
-    // We don't need this useEffect since we only update availableDrawerClasses
-    // after a plan is generated via the fetchAvailableDrawerClasses function
-    // Removing this effect since it was overriding the drawer classes
-
     return (
         <>
             <h1>Welcome {localStorage.getItem("userName")} </h1>
             <div className={styles['InputGroup'] }>
                 {error && <p style={{ color: "red" }}>{error}</p>}
+                
+                {/* Program Selection */}
                 <select value={selectedProgram} onChange={handleProgramChange}>
                     <option value="">Select a Program</option>
                     {programs.map((program) => (
@@ -354,6 +427,16 @@ function App() {
                         </option>
                     ))}
                 </select>
+                
+                <select value={selectedScheduleId} onChange={handleScheduleChange}>
+                    <option value="">Select a Saved Schedule</option>
+                    {schedules.map((schedule) => (
+                        <option key={schedule.scheduleId} value={schedule.scheduleId}>
+                            {schedule.scheduleName} ({schedule.programName})
+                        </option>
+                    ))}
+                </select>
+                
                 <button 
                     onClick={handleGenerateClick}
                     disabled={!selectedProgramId || loading}
@@ -390,7 +473,7 @@ function App() {
                         />
                     ))
                 ) : (
-                    <p>Click "Generate Schedule" to create a curriculum plan</p>
+                    <p>Click "Generate Schedule" to create a curriculum plan or select a saved schedule</p>
                 )}
             </SemesterColumnContainer>
             <Drawer>

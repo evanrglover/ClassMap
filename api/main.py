@@ -188,7 +188,6 @@ def generate_curriculum_plan(program_id):
             GROUP BY c.courseid, c.department, c.coursenum, c.coursename,
                     c.credits, c.requiresmatriculation, c.semestersavailable
         """, (program_id,))
-        print("Got the classes")
         
         classes = cur.fetchall()
         
@@ -319,6 +318,67 @@ def get_available_drawer_classes(program_id):
         
         return jsonify(available_classes), 200
     
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    
+@app.route("/getSchedules/<user_id>", methods=["GET"])
+def get_schedules(user_id):
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+        # Query to get all schedules for a specific student
+        cur.execute("""
+            SELECT scheduleid, schedulename
+            FROM schedule
+            WHERE studentid = %s
+        """, (user_id,))
+        
+        schedules = cur.fetchall()
+
+        
+        schedule_data = []
+        for schedule in schedules:
+            schedule_id, schedule_name = schedule  # unpack tuple
+            
+            schedule_data.append({
+                "scheduleId": schedule_id,
+                "scheduleName": schedule_name  # include name
+            })
+        
+        cur.close()
+        conn.close()
+        return jsonify(schedule_data), 200
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/getScheduleClasses/<schedule_id>", methods=["GET"])
+def get_schedule_classes(schedule_id):
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        
+      
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route("/saveSchedule/<programid>", methods=["POST"])
+def save_schedule(program_id):
+    try:
+         # Get user ID from token
+        user_id = get_user_id_from_request()
+            
+        # Create key for this user+program combination
+        schedule_key = f"{user_id}_{program_id}"
+        schedule = global_schedules[schedule_key]
+
+        semesters = []
+        print(schedule.semesters)
+          
+
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
