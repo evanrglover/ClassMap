@@ -72,6 +72,8 @@ function App() {
         setIsDrawerOpen(prev => !prev);
     };
 
+    // Come back to this function to fix it up. Right now the targetItems stored in drawer 
+    // have a mismatched format until dragged into semestercolumns. temporary fix worked for now.
     const handleDragEnd = (event) => {
         const { active, over } = event;
         if (!over || active.id === over.id) return;
@@ -79,7 +81,6 @@ function App() {
         // Debugging
         console.log('Active ID:', active.id); // Log the ID of the dragged item
         console.log('Over ID:', over.id);     // Log the ID of the target (dropped) item
-
     
         const drawerId = 'drawer';
     
@@ -90,7 +91,8 @@ function App() {
     
         const targetSemester = over.id;
     
-        if (!sourceSemester || !targetSemester) return;
+        // Look at this again
+        // if (!sourceSemester || !targetSemester) return;
         if (sourceSemester === targetSemester) return;
     
         let updatedData = { ...data };
@@ -98,14 +100,26 @@ function App() {
         let targetItems = targetSemester === drawerId ? [...drawerItems] : [...(data[targetSemester] || [])];
     
         const movedItemIndex = sourceItems.findIndex(cls => cls.id === active.id);
+        // console.log("Moved Item Bogus: ", movedItemIndex)
         if (movedItemIndex === -1) return;
     
         const [movedItem] = sourceItems.splice(movedItemIndex, 1);
+
+        const normalizedItem = {
+            id: `${movedItem.department} ${movedItem.number}`,
+            className: `${movedItem.department} ${movedItem.number}`,
+            description: movedItem.title || movedItem.description || '',
+            prerequisites: movedItem.prerequisites || [],
+            requiresMatriculation: movedItem.requiresMatriculation || false,
+            semesters: movedItem.semesters || [],
+        };
     
         // Prevent duplicates
         if (targetItems.some(cls => cls.id === active.id)) return;
     
-        targetItems.push(movedItem);
+        // targetItems.push(movedItem);
+        targetItems.push(sourceSemester === drawerId ? normalizedItem : movedItem);
+        console.log("Target Items: ", targetItems)
     
         if (sourceSemester !== drawerId) updatedData[sourceSemester] = sourceItems;
         if (targetSemester !== drawerId) updatedData[targetSemester] = targetItems;
@@ -254,7 +268,7 @@ function App() {
             </div>
 
             <DndContext collisionDetection={customCollisionDetectionAlgorithm} onDragStart={(event) => {
-                // console.log('Dragging item:', event.active.id); // Log the ID of the dragged item
+                console.log('Dragging item:', event.active.id); // Log the ID of the dragged item
             }}
             onDragEnd={handleDragEnd}
             >
@@ -293,8 +307,8 @@ function App() {
                             <div className="available-classes">
                             {drawerItems.map((cls) => (
                                     <ClassCard
-                                        key={cls.classid}
-                                        id={cls.classid}
+                                        key={cls.id}
+                                        id={cls.id}
                                         ClassName={`${cls.department} ${cls.number}`}
                                         ClassDescription={cls.title}
                                         Credits={cls.credits}
@@ -306,7 +320,7 @@ function App() {
                     </Drawer>
                 </SortableContext>
             </DndContext>
-            <div class="spacer"></div>
+            <div className="spacer"></div>
         </>
     );
 }

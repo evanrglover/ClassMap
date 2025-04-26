@@ -75,5 +75,4 @@ button:focus-visible {
   overflow-y: auto;
   display: flex;
   flex-wrap: wrap;
-  gap: .5rem;
 }
