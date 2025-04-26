@@ -237,6 +237,7 @@ function App() {
             setAvailableDrawerClasses(formattedDrawerClasses);
         } catch (error) {
             console.error("Error fetching available drawer classes:", error);
+
             // Don't set error state here as this might be called before the drawer is populated
         }
     };
@@ -578,7 +579,7 @@ function App() {
                             />
                         ))
                     ) : (
-                        <p>{selectedProgram ? "Loading classes..." : "Select a program to view available classes"}</p>
+                        <p>{selectedProgram ? "No available classes" : "Select a program to view available classes"}</p>
                     )}
                 </div>
             </Drawer>
