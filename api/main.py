@@ -3,11 +3,14 @@ from flask_bcrypt import Bcrypt
 from flask_cors import CORS
 from flask_jwt_extended import create_access_token, jwt_required, JWTManager
 import psycopg2
+from psycopg2.extras import RealDictCursor
+import uuid
+
+
 import os
 from ClassInfo import ClassInfo
 from CurriculumPlanner import CurriculumPlanner
 from Schedule import Schedule
-
 # Create a global schedule object that will persist between requests
 global_schedules = {}  # Dictionary to store schedules per user/program
 
@@ -321,67 +324,177 @@ def get_available_drawer_classes(program_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
     
-@app.route("/getSchedules/<user_id>", methods=["GET"])
+# API endpoint to save a schedule
+@app.route('/saveSchedule', methods=['POST'])
+def save_schedule():
+    try:
+        # Get request data
+        data = request.json
+        user_id = data.get('userId')
+        program_id = data.get('programId')
+        schedule_name = data.get('scheduleName', 'New Schedule')
+        schedule_id = data.get('scheduleId')  # May be None for new schedules
+        semester_data = data.get('semesterData', {})
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        
+        # If schedule_id is provided, check if it exists and belongs to the user
+        if schedule_id:
+            cursor.execute(
+                "SELECT * FROM schedule WHERE scheduleid = %s AND studentid = %s",
+                (schedule_id, user_id)
+            )
+            existing_schedule = cursor.fetchone()
+            
+            if not existing_schedule:
+                return jsonify({"error": "Schedule not found or unauthorized"}), 404
+            
+            # Update existing schedule name if it changed
+            cursor.execute(
+                "UPDATE schedule SET schedulename = %s WHERE scheduleid = %s",
+                (schedule_name, schedule_id)
+            )
+        else:
+            # Create a new schedule
+            schedule_id = str(uuid.uuid4())
+            cursor.execute(
+                "INSERT INTO schedule (scheduleid, schedulename, studentid) VALUES (%s, %s, %s)",
+                (schedule_id, schedule_name, user_id)
+            )
+        
+        # Delete existing semesters and their associated courses for this schedule
+        # (This is a complete replacement approach)
+        cursor.execute(
+            "DELETE FROM semester WHERE scheduleid = %s",
+            (schedule_id,)
+        )
+        
+        # Create new semesters and add courses
+        for semester_name, classes in semester_data.items():
+            # Create semester
+            semester_id = str(uuid.uuid4())
+            cursor.execute(
+                "INSERT INTO semester (semesterid, scheduleid) VALUES (%s, %s)",
+                (semester_id, schedule_id)
+            )
+            
+            # Add classes to semester
+            for class_info in classes:
+                class_name = class_info.get('className')
+                
+                # Find course ID by department and number
+                # Split the class name which is usually in format "DEPT 101"
+                if ' ' in class_name:
+                    dept, number = class_name.split(' ', 1)
+                    
+                    cursor.execute(
+                        "SELECT courseid FROM course WHERE department = %s AND coursenum = %s",
+                        (dept, number)
+                    )
+                    course_result = cursor.fetchone()
+                    
+                    if course_result:
+                        course_id = course_result['courseid']
+                        
+                        # Add to semester_course table
+                        cursor.execute(
+                            "INSERT INTO semestercourse (semesterid, scheduleid, courseid) VALUES (%s, %s, %s)",
+                            (semester_id, schedule_id, course_id)
+                        )
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({
+            "message": "Schedule saved successfully",
+            "scheduleId": schedule_id
+        }), 200
+        
+    except Exception as e:
+        print(f"Error saving schedule: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+
+# API endpoint to get all schedules for a user
+@app.route('/getSchedules/<user_id>', methods=['GET'])
 def get_schedules(user_id):
     try:
         conn = get_db_connection()
-        cur = conn.cursor()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-        # Query to get all schedules for a specific student
-        cur.execute("""
-            SELECT scheduleid, schedulename
-            FROM schedule
-            WHERE studentid = %s
+        # Join with program table to get program names
+        cursor.execute("""
+            SELECT 
+                s.scheduleid as "scheduleId", 
+                s.schedulename as "scheduleName", 
+                p.programid as "programId", 
+                p.programname as "programName" 
+            FROM schedule s
+            LEFT JOIN studentprogram sp ON s.studentid = sp.studentid
+            LEFT JOIN program p ON sp.programid = p.programid
+            WHERE s.studentid = %s
         """, (user_id,))
         
-        schedules = cur.fetchall()
-
-        
-        schedule_data = []
-        for schedule in schedules:
-            schedule_id, schedule_name = schedule  # unpack tuple
-            
-            schedule_data.append({
-                "scheduleId": schedule_id,
-                "scheduleName": schedule_name  # include name
-            })
-        
-        cur.close()
+        schedules = cursor.fetchall()
+        cursor.close()
         conn.close()
-        return jsonify(schedule_data), 200
-    
+        
+        return jsonify(schedules), 200
+        
     except Exception as e:
+        print(f"Error fetching schedules: {str(e)}")
         return jsonify({"error": str(e)}), 500
-
-@app.route("/getScheduleClasses/<schedule_id>", methods=["GET"])
+# API endpoint to get classes for a specific schedule
+@app.route('/getScheduleClasses/<schedule_id>', methods=['GET'])
 def get_schedule_classes(schedule_id):
     try:
         conn = get_db_connection()
-        cur = conn.cursor()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
         
-      
-    
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-
-@app.route("/saveSchedule/<programid>", methods=["POST"])
-def save_schedule(program_id):
-    try:
-         # Get user ID from token
-        user_id = get_user_id_from_request()
+        # Get all semester IDs for this schedule
+        cursor.execute(
+            "SELECT semesterid FROM semester WHERE scheduleid = %s",
+            (schedule_id,)
+        )
+        semesters = cursor.fetchall()
+        
+        result = {}
+        
+        # For each semester, get the courses
+        for sem in semesters:
+            semester_id = sem['semesterid']
             
-        # Create key for this user+program combination
-        schedule_key = f"{user_id}_{program_id}"
-        schedule = global_schedules[schedule_key]
-
-        semesters = []
-        print(schedule.semesters)
-          
-
+            # Get metadata for the semester (this would need a column in your semester table)
+            # For now, I'll assume you have a way to extract semester name and year
+            # You may need to add these columns to your schema
+            
+            # Get all courses in this semester
+            cursor.execute("""
+                SELECT c.courseid, c.department, c.coursenum, c.coursename, 
+                       c.coursedepandnum as className, c.coursedescription as description, 
+                       c.credits
+                FROM semestercourse sc
+                JOIN course c ON sc.courseid = c.courseid
+                WHERE sc.semesterid = %s AND sc.scheduleid = %s
+            """, (semester_id, schedule_id))
+            
+            courses = cursor.fetchall()
+            
+            # Extract semester name from metadata or use a placeholder
+            # This is a placeholder - you'll need to adjust based on your schema
+            semester_name = f"Semester {semester_id[:8]}"  # Using part of UUID as identifier
+            
+            result[semester_name] = courses
+        
+        cursor.close()
+        conn.close()
+        
+        return jsonify(result), 200
+        
     except Exception as e:
+        print(f"Error fetching schedule classes: {str(e)}")
         return jsonify({"error": str(e)}), 500
-
 # port configuration
 port = int(os.environ.get("PORT", 5000))
 

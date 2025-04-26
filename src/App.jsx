@@ -312,6 +312,7 @@ function App() {
             setLoading(false);
         }
     };
+    
 
     const handleGenerateClick = () => {
         if (selectedProgramId) {
@@ -326,7 +327,7 @@ function App() {
     const containerRef = useRef(null);
 
     const handleSavePdf = async() => {
-        const response = await axios.get(`${API_BASE_URL}/saveSchedule/${programId}`, {});
+
         if (containerRef.current) {
             const opt = {
                 margin: 1,
@@ -341,8 +342,58 @@ function App() {
             console.error('SemesterColumnContainer not found.');
         }
     };
+    const handleSaveSchedule = async () => {
+        if (!selectedProgramId || Object.keys(data).length === 0) {
+            setError("Cannot save empty schedule");
+            return;
+        }
+    
+        try {
+            // Get user ID from localStorage
+            const userId = localStorage.getItem('userId');
+            if (!userId) {
+                setError("You must be logged in to save schedules");
+                return;
+            }
+    
+            // Ask user for a schedule name if it's a new schedule
+            let scheduleName = selectedSchedule;
+            if (!selectedScheduleId) {
+                const userInput = prompt("Enter a name for this schedule:", 
+                                        `${selectedProgram} Plan`);
+                if (!userInput) return; // User cancelled
+                scheduleName = userInput;
+            }
+    
+            const response = await axios.post(`${API_BASE_URL}/saveSchedule`, {
+                userId: userId,
+                programId: selectedProgramId,
+                scheduleName: scheduleName,
+                scheduleId: selectedScheduleId || null,
+                semesterData: data
+            });
+    
+            console.log("Save response:", response.data);
+            
+            // Update the scheduleId if this was a new schedule
+            if (!selectedScheduleId) {
+                setSelectedScheduleId(response.data.scheduleId);
+                setSelectedSchedule(scheduleName);
+                
+                // Refresh the schedules list
+                const schedulesResponse = await axios.get(`${API_BASE_URL}/getSchedules/${userId}`);
+                setSchedules(schedulesResponse.data);
+            }
+            
+            alert("Schedule saved successfully!");
+        } catch (error) {
+            console.error("Error saving schedule:", error);
+            setError("Failed to save schedule");
+        }
+    };
 
-    const handleProgramChange = (e) => {
+    const handleProgramChange = async(e) => {
+
         const programName = e.target.value;
         setSelectedProgram(programName);
         setData({}); // Clear any existing schedule data
@@ -374,7 +425,7 @@ function App() {
         setSelectedScheduleId(scheduleId);
         
         if (scheduleId) {
-            // Find the schedule object
+            // Find the schedule object - make sure to match property names from API
             const schedule = schedules.find(s => s.scheduleId.toString() === scheduleId);
             if (schedule) {
                 setSelectedSchedule(schedule.scheduleName);
@@ -432,7 +483,8 @@ function App() {
                     <option value="">Select a Saved Schedule</option>
                     {schedules.map((schedule) => (
                         <option key={schedule.scheduleId} value={schedule.scheduleId}>
-                            {schedule.scheduleName} ({schedule.programName})
+                            {schedule.scheduleName || "(Unnamed Schedule)"} 
+                            {schedule.programName ? `(${schedule.programName})` : ""}
                         </option>
                     ))}
                 </select>
@@ -453,6 +505,13 @@ function App() {
                     disabled={Object.keys(data).length === 0}
                 >
                     Save as PDF
+                </button>
+                <button 
+                    onClick={handleSaveSchedule} 
+                    className={styles['SaveButton']}
+                    disabled={Object.keys(data).length === 0 || !selectedProgramId}
+                >
+                    Save Schedule
                 </button>
             </div>
             <SemesterColumnContainer className="SemesterColumnContainer" ref={containerRef}>
