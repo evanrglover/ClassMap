@@ -285,16 +285,40 @@ function App() {
         }
     };
 
-    // New function to load schedule from saved schedule
     const loadSchedule = async (scheduleId) => {
         setLoading(true);
         try {
-            console.log(`Loading schedule ID: ${scheduleId}`);
             const response = await axios.get(`${API_BASE_URL}/getScheduleClasses/${scheduleId}`);
-            console.log("Schedule classes response:", response.data);
             
-            // Set the data directly from the response
-            setData(response.data);
+            // Process data similar to generatePlan function
+            const newData = {};
+            
+            // Ensure we're processing the response data correctly
+            if (response.data && typeof response.data === 'object') {
+                Object.entries(response.data).forEach(([semester, classes]) => {
+                    // Make sure classes is an array before mapping
+                    if (Array.isArray(classes)) {
+                        newData[semester] = classes.map((cls) => ({
+                            ...cls,
+                            id: cls.className || `${cls.department} ${cls.number}` // Ensure unique ID
+                        }));
+                        
+                        console.log(`Semester ${semester} has ${classes.length} classes`);
+                        classes.forEach((cls) => {
+                            console.log(` -> ${cls.department} ${cls.coursenum}`);
+                        });
+                    } else {
+                        console.error(`Classes for semester ${semester} is not an array:`, classes);
+                        newData[semester] = []; // Initialize as empty array
+                    }
+                });
+                
+                // Set the data with processed format
+                setData(newData);
+            } else {
+                console.error("Unexpected response format:", response.data);
+                setError("Invalid schedule data format");
+            }
             
             // Find program ID for this schedule to update available drawer classes
             const schedule = schedules.find(s => s.scheduleId === scheduleId);
@@ -312,7 +336,6 @@ function App() {
             setLoading(false);
         }
     };
-    
 
     const handleGenerateClick = () => {
         if (selectedProgramId) {
@@ -342,6 +365,7 @@ function App() {
             console.error('SemesterColumnContainer not found.');
         }
     };
+
     const handleSaveSchedule = async () => {
         if (!selectedProgramId || Object.keys(data).length === 0) {
             setError("Cannot save empty schedule");
@@ -524,9 +548,13 @@ function App() {
                             ClassCards={data[semester].map((c, index) => (
                                 <ClassCard
                                     key={index}
-                                    ClassName={c.className}
-                                    ClassDescription={c.description}
-                                    onRemove={() => handleRemoveFromSemester(semester, c.className || c.id)}
+                                    ClassName={c.ClassName || c.className || `${c.department} ${c.number}`}
+                                    ClassDescription={c.ClassDescription || c.description || c.title}
+                                    Credits={c.Credits || c.credits}
+                                    Semesters={c.Semesters || (Array.isArray(c.semesters) ? c.semesters.join(', ') : c.semesters || '')}
+                                    PreReqs={c.PreReqs || (Array.isArray(c.prerequisites) ? c.prerequisites.join(', ') : c.prerequisites || '')}
+                                    ReqType={c.ReqType || c.reqType || ""}
+                                    onRemove={() => handleRemoveFromSemester(semester, c.ClassName || c.className || c.id)}
                                 />
                             ))}
                         />

@@ -372,20 +372,33 @@ def save_schedule():
         
         # Create new semesters and add courses
         for semester_name, classes in semester_data.items():
+            # Parse semester name to extract season and year
+            # Expected format: "Fall 2025", "Spring 2026", etc.
+            parts = semester_name.split()
+            if len(parts) >= 2:
+                season = parts[0].lower()  # Convert to lowercase to match enum type
+                try:
+                    year = int(parts[1])
+                except ValueError:
+                    year = 2025  # Default if year can't be parsed
+            else:
+                season = "fall"  # Default season
+                year = 2025      # Default year
+            
             # Create semester
             semester_id = str(uuid.uuid4())
             cursor.execute(
-                "INSERT INTO semester (semesterid, scheduleid) VALUES (%s, %s)",
-                (semester_id, schedule_id)
+                "INSERT INTO semester (semesterid, scheduleid, season, year) VALUES (%s, %s, %s, %s)",
+                (semester_id, schedule_id, season, year)
             )
             
             # Add classes to semester
             for class_info in classes:
-                class_name = class_info.get('className')
+                class_name = class_info.get('className') or class_info.get('ClassName')
                 
                 # Find course ID by department and number
                 # Split the class name which is usually in format "DEPT 101"
-                if ' ' in class_name:
+                if class_name and ' ' in class_name:
                     dept, number = class_name.split(' ', 1)
                     
                     cursor.execute(
@@ -415,7 +428,6 @@ def save_schedule():
     except Exception as e:
         print(f"Error saving schedule: {str(e)}")
         return jsonify({"error": str(e)}), 500
-
 # API endpoint to get all schedules for a user
 @app.route('/getSchedules/<user_id>', methods=['GET'])
 def get_schedules(user_id):
@@ -454,7 +466,7 @@ def get_schedule_classes(schedule_id):
         
         # Get all semester IDs for this schedule
         cursor.execute(
-            "SELECT semesterid FROM semester WHERE scheduleid = %s",
+            "SELECT semesterid, season, year FROM semester WHERE scheduleid = %s",
             (schedule_id,)
         )
         semesters = cursor.fetchall()
@@ -464,28 +476,40 @@ def get_schedule_classes(schedule_id):
         # For each semester, get the courses
         for sem in semesters:
             semester_id = sem['semesterid']
-            
-            # Get metadata for the semester (this would need a column in your semester table)
-            # For now, I'll assume you have a way to extract semester name and year
-            # You may need to add these columns to your schema
+            semester_name = sem['season'].capitalize() + " " + str(sem['year'])
             
             # Get all courses in this semester
             cursor.execute("""
-                SELECT c.courseid, c.department, c.coursenum, c.coursename, 
-                       c.coursedepandnum as className, c.coursedescription as description, 
-                       c.credits
+                SELECT c.courseid, c.department, c.coursenum, c.coursename as title, 
+                       c.credits, c.requiresmatriculation, c.semestersavailable
                 FROM semestercourse sc
                 JOIN course c ON sc.courseid = c.courseid
                 WHERE sc.semesterid = %s AND sc.scheduleid = %s
             """, (semester_id, schedule_id))
             
             courses = cursor.fetchall()
+            formatted_courses = []
             
-            # Extract semester name from metadata or use a placeholder
-            # This is a placeholder - you'll need to adjust based on your schema
-            semester_name = f"Semester {semester_id[:8]}"  # Using part of UUID as identifier
+            for course in courses:
+     
+                prereq_list = None
+                
+                # Format course data to match generatePlan output
+                formatted_course = {
+                    "className": f"{course['department']} {course['coursenum']}",
+                    "description": course['title'],
+                    "credits": course['credits'],
+                    "prerequisites": prereq_list,
+                    "semesters": course['semestersavailable'] 
+                        if isinstance(course['semestersavailable'], list) 
+                        else (course['semestersavailable'].strip('{}').split(',') 
+                            if course['semestersavailable'] else []),
+                    "requiresMatriculation": course['requiresmatriculation']
+                }
+                
+                formatted_courses.append(formatted_course)
             
-            result[semester_name] = courses
+            result[semester_name] = formatted_courses
         
         cursor.close()
         conn.close()
@@ -495,6 +519,7 @@ def get_schedule_classes(schedule_id):
     except Exception as e:
         print(f"Error fetching schedule classes: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
 # port configuration
 port = int(os.environ.get("PORT", 5000))
 
