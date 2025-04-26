@@ -143,7 +143,6 @@ class CurriculumPlanner:
         return f"{season.capitalize()} {year}"
     
     def print_curriculum(self):
-        print("Curriculum Semester Plan:")
         for semester in range(1, 13):
             semester_name = self.get_semester_name(semester)
             classes = self.semester_plan[semester]
@@ -198,7 +197,6 @@ def main():
         planner.add_class(course)
     
     plan = planner.plan_curriculum()
-    planner.print_curriculum()
 
 if __name__ == "__main__":
     main()

@@ -65,7 +65,6 @@ def login():
     cur.execute("SELECT studentid, password, firstname, lastname FROM Student WHERE studentemail = %s", (email,))
     user = cur.fetchone()
     if user and bcrypt.check_password_hash(user[1], password):
-        print("User found")
         user_id = user[0]
         user_name = f"{user[2]} {user[3]}"
         # Create token with user ID in the identity
@@ -98,12 +97,10 @@ def home():
 # Gets the programs
 @app.route("/getPrograms", methods=["GET"])
 def getPrograms():
-    print("hello")
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("SELECT programid, programname FROM program")
     programs = cur.fetchall()
-    print(programs)
     return jsonify([{"programid": program[0], "programname": program[1]} for program in programs]), 200
 
 #get classes for a specific program
@@ -112,7 +109,6 @@ def getProgramClasses(program_id):
     try:
         conn = get_db_connection()
         cur = conn.cursor()
-        print("it makes the connection")
         # Query to get classes associated with a program
         cur.execute("""
             SELECT c.courseid, c.department, c.coursenum, c.coursename, c.credits,
@@ -235,12 +231,10 @@ def generate_curriculum_plan(program_id):
         # Create planner and add classes
         planner = CurriculumPlanner(start_semester=start_semester, start_year=start_year)
         for course in class_info_objects:
-            print(course.semesters)
             planner.add_class(course)
         
         # Generate plan
         semester_plan = planner.plan_curriculum()
-        print(semester_plan)
         
         # Format plan for frontend and update schedule
         formatted_plan = {}
@@ -294,7 +288,6 @@ def get_available_drawer_classes(program_id):
         if schedule_key not in global_schedules:
             # If no schedule exists yet, return all program classes
             return getProgramClasses(program_id)
-        
         schedule = global_schedules[schedule_key]
         
         # Create a set of all class names that are in semesters
@@ -318,7 +311,6 @@ def get_available_drawer_classes(program_id):
                     "requiresMatriculation": class_info.requires_matriculation,
                     "semesters": class_info.semesters
                 })
-        
         return jsonify(available_classes), 200
     
     except Exception as e:
