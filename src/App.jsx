@@ -536,7 +536,7 @@ function App() {
                 <SortableContext id="drawer" items={drawerItems.map(c => c.id)}>
                     <Drawer isOpen={isDrawerOpen} toggleDrawer={toggleDrawer}>
                         <h2>Available Classes for {selectedProgram}</h2>
-                        <div className="available-classes">
+                        <div className={styles["available-classes"]}>
                             {drawerItems.length > 0 ? (
                                 drawerItems.map((cls) => (
                                     <ClassCard
