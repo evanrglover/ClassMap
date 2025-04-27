@@ -13,7 +13,7 @@ import SemesterColumnContainer from './SemesterColumnContainer/SemesterColumn.js
 import SaveButton from './SaveButton/SaveButton.jsx';
 import html2pdf from 'html2pdf.js'; // Import html2pdf
 import { useNavigate, useParams } from 'react-router-dom';
-import { DndContext, closestCorners } from '@dnd-kit/core';
+import { DndContext, pointerWithin, rectIntersection } from '@dnd-kit/core';
 import { SortableContext, arrayMove } from '@dnd-kit/sortable';
 
 function App() {
@@ -25,9 +25,9 @@ function App() {
     const [selectedProgram, setSelectedProgram] = useState("");
     const [selectedProgramId, setSelectedProgramId] = useState("");
     const [programClasses, setProgramClasses] = useState([]);
-    const [availableDrawerClasses, setAvailableDrawerClasses] = useState([]);
     const [loading, setLoading] = useState(false);
     const [data, setData] = useState({});
+    const [isDrawerOpen, setIsDrawerOpen] = useState(true);
     
     // New state for schedules
     const [schedules, setSchedules] = useState([]);
@@ -69,87 +69,70 @@ function App() {
         
         fetchSchedules();
     }, []);
+
+    // Custom collision detection algorithm from drag-and-drop implementation
+    function customCollisionDetectionAlgorithm(args) {
+        const pointerCollisions = pointerWithin(args);
+        if (pointerCollisions.length > 0) {
+          return pointerCollisions;
+        }
+        return rectIntersection(args);
+    }
     
+    // Improved handleDragEnd that merges both implementations
     const handleDragEnd = (event) => {
         const { active, over } = event;
     
         if (!over || active.id === over.id) return;
     
-        // Check if we're dragging from drawer to semester
-        if (active.id.startsWith('drawer-') && over.id.startsWith('semester-')) {
-            // Extract the real class ID and semester ID
-            const classId = active.id.replace('drawer-', '');
-            const targetSemester = over.id.replace('semester-', '');
-            
-            // Find the class in the drawer
-            const classObj = availableDrawerClasses.find(c => c.className === classId);
-            if (!classObj) return;
-            
-            // Add to semester
-            const targetItems = [...(data[targetSemester] || [])];
-            
-            // Prevent duplicates
-            if (targetItems.some(cls => cls.className === classId)) return;
-            
-            // Add class to semester
-            targetItems.push({
-                ...classObj,
-                id: classId  // Ensure it has an ID for dragging
-            });
-            
-            // Update data state
-            setData({
-                ...data,
-                [targetSemester]: targetItems
-            });
-            
-            // Remove from available drawer classes
-            setAvailableDrawerClasses(prev => 
-                prev.filter(c => c.className !== classId)
-            );
-            
-            return;
-        }
+        // Debugging
+        console.log('Active ID:', active.id);
+        console.log('Over ID:', over.id);
         
-        // Handle movement between semesters
-        const sourceSemester = Object.keys(data).find((semester) =>
-            data[semester].some((cls) => cls.id === active.id || cls.className === active.id)
-        );
-        const targetSemester = over.id.replace('semester-', '');
+        const drawerId = 'drawer';
+    
+        // Find source container
+        const sourceSemester = Object.keys(data).find(semester =>
+            data[semester].some(cls => cls.id === active.id || cls.className === active.id)
+        ) || (drawerItems.some(cls => cls.id === active.id) ? drawerId : null);
+    
+        const targetSemester = over.id;
     
         if (!sourceSemester || !targetSemester) return;
-    
-        // Don't do anything if dragging into same column
         if (sourceSemester === targetSemester) return;
     
-        const sourceItems = [...data[sourceSemester]];
-        const targetItems = [...(data[targetSemester] || [])];
+        let updatedData = { ...data };
+        let sourceItems = sourceSemester === drawerId ? [...drawerItems] : [...data[sourceSemester]];
+        let targetItems = targetSemester === drawerId ? [...drawerItems] : [...(data[targetSemester] || [])];
     
-        // Find the moved item
-        const movedItemIndex = sourceItems.findIndex(
-            (cls) => cls.id === active.id || cls.className === active.id
-        );
+        const movedItemIndex = sourceItems.findIndex(cls => cls.id === active.id || cls.className === active.id);
         if (movedItemIndex === -1) return;
     
         const [movedItem] = sourceItems.splice(movedItemIndex, 1);
-        
-        // Prevent duplicates
-        if (targetItems.some(cls => 
-            cls.id === movedItem.id || 
-            cls.className === movedItem.className ||
-            cls.id === movedItem.className || 
-            cls.className === movedItem.id
-        )) return;
-        
-        targetItems.push(movedItem);
-    
-        setData({
-            ...data,
-            [sourceSemester]: sourceItems,
-            [targetSemester]: targetItems,
-        });
-    };
 
+        // Format item consistently for the target container
+        const normalizedItem = {
+            id: movedItem.id || `${movedItem.department} ${movedItem.number}`,
+            className: movedItem.className || `${movedItem.department} ${movedItem.number}`,
+            description: movedItem.description || movedItem.title || '',
+            prerequisites: movedItem.prerequisites || [],
+            requiresMatriculation: movedItem.requiresMatriculation || false,
+            semesters: movedItem.semesters || [],
+            credits: movedItem.credits || 0,
+        };
+    
+        // Prevent duplicates
+        if (targetItems.some(cls => cls.id === active.id || cls.className === active.id)) return;
+    
+        targetItems.push(sourceSemester === drawerId ? normalizedItem : movedItem);
+        console.log("Target Items: ", targetItems);
+    
+        if (sourceSemester !== drawerId) updatedData[sourceSemester] = sourceItems;
+        if (targetSemester !== drawerId) updatedData[targetSemester] = targetItems;
+    
+        setData(updatedData);
+    };
+    
     // Handle removing a class from semester back to drawer
     const handleRemoveFromSemester = (semesterName, classId) => {
         // Make sure the semester exists
@@ -173,15 +156,6 @@ function App() {
             ...data,
             [semesterName]: updatedSemester
         });
-        
-        // Add back to drawer if not already there
-        const isInDrawer = availableDrawerClasses.some(
-            c => c.className === classId || c.className === classObj.className
-        );
-        
-        if (!isInDrawer) {
-            setAvailableDrawerClasses(prev => [...prev, classObj]);
-        }
     };
 
     const fetchProgramClasses = async (programId) => {
@@ -194,14 +168,12 @@ function App() {
             // Process the classes to ensure consistent format
             const formattedClasses = response.data.map(cls => ({
                 ...cls,
+                id: `${cls.department} ${cls.number}`,
                 className: `${cls.department} ${cls.number}`,
                 description: cls.title
             }));
             
             setProgramClasses(formattedClasses);
-            
-            // Directly set the drawer classes since we haven't generated a plan yet
-            setAvailableDrawerClasses(formattedClasses);
         } catch (error) {
             console.error("Error fetching program classes:", error);
             setError("Failed to load classes for this program");
@@ -209,37 +181,9 @@ function App() {
             setLoading(false);
         }
     };
-    
-    const fetchAvailableDrawerClasses = async (programId) => {
-        // This function is only used after a plan is generated
-        try {
-            // Set up headers with token if available
-            const config = {};
-            if (token) {
-                config.headers = {
-                    Authorization: `Bearer ${token}`
-                };
-            }
-            
-            const response = await axios.get(`${API_BASE_URL}/getAvailableDrawerClasses/${programId}`, config);
-            console.log("Available drawer classes response:", response.data);
-            
-            // Format the drawer classes to ensure consistency
-            const formattedDrawerClasses = response.data.map(cls => {
-                // Handle both formats from the two different endpoints
-                return {
-                    ...cls,
-                    className: cls.className || `${cls.department} ${cls.number}`,
-                    description: cls.description || cls.title
-                };
-            });
-            
-            setAvailableDrawerClasses(formattedDrawerClasses);
-        } catch (error) {
-            console.error("Error fetching available drawer classes:", error);
 
-            // Don't set error state here as this might be called before the drawer is populated
-        }
+    const toggleDrawer = () => {
+        setIsDrawerOpen(prev => !prev);
     };
 
     const generatePlan = async (programId) => {
@@ -276,10 +220,6 @@ function App() {
             
             setData(newData);
             console.log("Program classes:", response.data);
-            
-            // After generating the plan, fetch the updated available drawer classes
-            fetchAvailableDrawerClasses(programId);
-
         } catch (error) {
             console.error("Error generating plan:", error);
             setError("Failed to generate curriculum plan");
@@ -321,14 +261,13 @@ function App() {
                 setError("Invalid schedule data format");
             }
             
-            // Find program ID for this schedule to update available drawer classes
+            // Find program ID for this schedule
             const schedule = schedules.find(s => s.scheduleId === scheduleId);
             if (schedule) {
                 setSelectedProgramId(schedule.programId);
                 setSelectedProgram(schedule.programName);
-                
-                // Fetch available drawer classes for this program
-                fetchAvailableDrawerClasses(schedule.programId);
+                // Fetch program classes
+                fetchProgramClasses(schedule.programId);
             }
         } catch (error) {
             console.error("Error loading schedule:", error);
@@ -350,8 +289,7 @@ function App() {
 
     const containerRef = useRef(null);
 
-    const handleSavePdf = async() => {
-
+    const handleSavePdf = () => {
         if (containerRef.current) {
             const opt = {
                 margin: 1,
@@ -417,8 +355,7 @@ function App() {
         }
     };
 
-    const handleProgramChange = async(e) => {
-
+    const handleProgramChange = (e) => {
         const programName = e.target.value;
         setSelectedProgram(programName);
         setData({}); // Clear any existing schedule data
@@ -433,11 +370,10 @@ function App() {
             const programId = selectedProgramObj.programid;
             setSelectedProgramId(programId);
             
-            // Only fetch the classes to populate the drawer, don't generate plan automatically
+            // Fetch program classes
             fetchProgramClasses(programId);
         } else {
             setProgramClasses([]);
-            setAvailableDrawerClasses([]);
             setSelectedProgramId("");
         }
         
@@ -450,7 +386,7 @@ function App() {
         setSelectedScheduleId(scheduleId);
         
         if (scheduleId) {
-            // Find the schedule object - make sure to match property names from API
+            // Find the schedule object
             const schedule = schedules.find(s => s.scheduleId.toString() === scheduleId);
             if (schedule) {
                 setSelectedSchedule(schedule.scheduleName);
@@ -488,9 +424,25 @@ function App() {
         });
     };
 
+    // Get all scheduled class names from the generated plan
+    const scheduledClassNames = new Set(
+        Object.values(data).flat().map(c => c.className || c.id)
+    );
+
+    // Filter the drawer classes to take out the ones in the schedule
+    const drawerItems = programClasses.filter(
+        cls => {
+            const className = cls.className || `${cls.department} ${cls.number}`;
+            return !scheduledClassNames.has(className);
+        }
+    ).map(cls => ({
+        ...cls,
+        id: cls.id || `${cls.department} ${cls.number}`
+    }));
+
     return (
         <>
-            <h1>Welcome {localStorage.getItem("userName")} </h1>
+            <h2>Welcome {localStorage.getItem("userName")} </h2>
             <div className={styles['InputGroup'] }>
                 {error && <p style={{ color: "red" }}>{error}</p>}
                 
@@ -523,6 +475,7 @@ function App() {
                 </button>
                 {loading && <p>Loading classes...</p>}
             </div>
+
             <div className={styles['ButtonGroup']}>
                 <button 
                     onClick={handleSavePdf} 
@@ -539,50 +492,70 @@ function App() {
                     Save Schedule
                 </button>
             </div>
-            <SemesterColumnContainer className="SemesterColumnContainer" ref={containerRef}>
-                {Object.entries(data).length > 0 ? (
-                    // Sort the semesters chronologically before mapping
-                    sortSemesters(Object.keys(data)).map((semester) => (
-                        <SemesterColumn
+
+            <DndContext 
+                collisionDetection={customCollisionDetectionAlgorithm} 
+                onDragStart={(event) => {
+                    console.log('Dragging item:', event.active.id); 
+                }}
+                onDragEnd={handleDragEnd}
+            >
+                <SemesterColumnContainer className="SemesterColumnContainer" ref={containerRef}>
+                    {Object.entries(data).length > 0 ? (
+                        // Sort the semesters chronologically before mapping
+                        sortSemesters(Object.keys(data)).map((semester) => (
+                            <SortableContext
                             key={semester}
-                            SemesterName={semester}
-                            ClassCards={data[semester].map((c, index) => (
-                                <ClassCard
-                                    key={index}
-                                    ClassName={c.ClassName || c.className || `${c.department} ${c.number}`}
-                                    ClassDescription={c.ClassDescription || c.description || c.title}
-                                    Credits={c.Credits || c.credits}
-                                    Semesters={c.Semesters || (Array.isArray(c.semesters) ? c.semesters.join(', ') : c.semesters || '')}
-                                    PreReqs={c.PreReqs || (Array.isArray(c.prerequisites) ? c.prerequisites.join(', ') : c.prerequisites || '')}
-                                    ReqType={c.ReqType || c.reqType || ""}
-                                    onRemove={() => handleRemoveFromSemester(semester, c.ClassName || c.className || c.id)}
+                            id={semester}
+                            items={data[semester].map((cls) => cls.id || cls.className)}
+                            >
+                                <SemesterColumn
+                                key={semester}
+                                SemesterName={semester}
+                                ClassCards={data[semester].map((c, index) => (
+                                    <ClassCard
+                                        key={c.id || c.className || index}
+                                        id={c.id || c.className}
+                                        ClassName={c.className || `${c.department} ${c.number}`}
+                                        ClassDescription={c.description || c.title}
+                                        Credits={c.credits}
+                                        Semesters={Array.isArray(c.semesters) ? c.semesters.join(', ') : c.semesters || ''}
+                                        PreReqs={Array.isArray(c.prerequisites) ? c.prerequisites.join(', ') : c.prerequisites || ''}
+                                        ReqType={c.reqType || ""}
+                                        onRemove={() => handleRemoveFromSemester(semester, c.id || c.className)}
+                                    />
+                                ))}
                                 />
-                            ))}
-                        />
-                    ))
-                ) : (
-                    <p>Click "Generate Schedule" to create a curriculum plan or select a saved schedule</p>
-                )}
-            </SemesterColumnContainer>
-            <Drawer>
-                <h2>Available Classes for {selectedProgram}</h2>
-                <div className={styles["available-classes"]}>
-                    {availableDrawerClasses.length > 0 ? (
-                        availableDrawerClasses.map((cls) => (
-                            <ClassCard
-                                key={cls.classid || cls.className}
-                                ClassName={cls.className || `${cls.department} ${cls.number}`}
-                                ClassDescription={cls.description || cls.title}
-                                Credits={cls.credits}
-                                Semesters={Array.isArray(cls.semesters) ? cls.semesters.join(', ') : ''}
-                                PreReqs={Array.isArray(cls.prerequisites) ? cls.prerequisites.join(', ') : ''}
-                            />
+                            </SortableContext>
                         ))
                     ) : (
-                        <p>{selectedProgram ? "No available classes" : "Select a program to view available classes"}</p>
+                        <p>Click "Generate Schedule" to create a curriculum plan or select a saved schedule</p>
                     )}
-                </div>
-            </Drawer>
+                </SemesterColumnContainer>
+            
+                <SortableContext id="drawer" items={drawerItems.map(c => c.id)}>
+                    <Drawer isOpen={isDrawerOpen} toggleDrawer={toggleDrawer}>
+                        <h2>Available Classes for {selectedProgram}</h2>
+                        <div className="available-classes">
+                            {drawerItems.length > 0 ? (
+                                drawerItems.map((cls) => (
+                                    <ClassCard
+                                        key={cls.id}
+                                        id={cls.id}
+                                        ClassName={cls.className || `${cls.department} ${cls.number}`}
+                                        ClassDescription={cls.description || cls.title}
+                                        Credits={cls.credits}
+                                        Semesters={Array.isArray(cls.semesters) ? cls.semesters.join(', ') : ''}
+                                        PreReqs={Array.isArray(cls.prerequisites) ? cls.prerequisites.join(', ') : ''}
+                                    />
+                                ))
+                            ) : (
+                                <p>{selectedProgram ? "No available classes" : "Select a program to view available classes"}</p>
+                            )}
+                        </div>
+                    </Drawer>
+                </SortableContext>
+            </DndContext>
         </>
     );
 }
