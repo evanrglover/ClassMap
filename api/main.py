@@ -20,6 +20,15 @@ app.config["JWT_SECRET_KEY"] = "supersecretkey"
 # JWT for token management
 jwt = JWTManager(app)
 
+#Connects to Driggs testing database
+# def get_db_connection():
+#     return psycopg2.connect(
+#         dbname="postgres",
+#         user="postgres",
+#         password="",
+#         host="localhost"
+#     )
+
 # Connects to the database (local)
 # def get_db_connection():
 #     return psycopg2.connect(
@@ -60,9 +69,20 @@ def login():
 def get_schools():
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT schoolid, schoolname FROM school")
+    cur.execute("SELECT schoolid, schoolname, schoolcolor FROM school")
     schools = cur.fetchall()
-    return jsonify([{"schoolid": school[0], "schoolname": school[1]} for school in schools]), 200
+    print("Schools fetched from DB:", schools)
+    return jsonify([{"schoolid": school[0], "schoolname": school[1], "schoolcolor": school[2]} for school in schools]), 200
+
+    # schools = [
+    #     {"schoolid": 1, "schoolname": "School 1", "schoolcolor": "Red"},
+    #     {"schoolid": 2, "schoolname": "School 2", "schoolcolor": "Blue"}
+    # ]
+    
+    # # Debug: check what schools data looks like before sending it as a JSON response
+    # print("Schools fetched (hardcoded):", schools)
+
+    # return jsonify(schools), 200
 
 @app.route("/")
 def home():

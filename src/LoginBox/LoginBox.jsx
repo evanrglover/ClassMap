@@ -3,6 +3,7 @@ import styles from './LoginBox.module.css'
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from 'react-router-dom';
+import useSchoolColor from '../Hooks/UseSchoolColor';
 
 const Login = ({ setToken }) => {
   const [email, setEmail] = useState("");
@@ -10,6 +11,8 @@ const Login = ({ setToken }) => {
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const { school } = useParams();
+
+  useSchoolColor();
 
   const handleLogin = async (e) => {
     e.preventDefault();

@@ -14,7 +14,13 @@ import SaveButton from './SaveButton/SaveButton.jsx';
 import html2pdf from 'html2pdf.js'; // Import html2pdf
 import { useNavigate, useParams } from 'react-router-dom';
 
+import useSchoolColor from './Hooks/UseSchoolColor.js';
+
 function App() {
+
+    useSchoolColor();
+
+
     const { school, user } = useParams();
     const [token, setToken] = useState(localStorage.getItem('token') || '');
     const [error, setError] = useState("");
@@ -149,6 +155,11 @@ function App() {
             return semesterOrder[semA] - semesterOrder[semB];
         });
     };
+
+    // useEffect(() => {
+    //     const color = localStorage.getItem("schoolColor") || '#ffffff';
+    //     document.documentElement.style.setProperty('--school-bg-color', color);
+    // }, []);
 
     return (
         <>
