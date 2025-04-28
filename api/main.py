@@ -175,11 +175,22 @@ def generate_curriculum_plan(program_id):
         start_semester = data.get("startSemester", "Spring")
         start_year = data.get("startYear", 2025)
         
+        # Get pre-placed classes from request
+        pre_placed_classes = data.get("prePlacedClasses", {})
+        
         # Get user ID from token
         user_id = get_user_id_from_request()
             
         # Create key for this user+program combination
         schedule_key = f"{user_id}_{program_id}"
+        
+        # If no pre-placed classes were provided but we have a stored schedule, use that
+        if not pre_placed_classes and schedule_key in global_schedules:
+            existing_schedule = global_schedules[schedule_key]
+            # Convert from the schedule's internal representation to simple class name lists
+            for semester_name, classes in existing_schedule.semesters.items():
+                if classes:  # Only include non-empty semesters
+                    pre_placed_classes[semester_name] = [cls.name for cls in classes]
         
         # Get all classes for the program
         conn = get_db_connection()
@@ -198,11 +209,7 @@ def generate_curriculum_plan(program_id):
         
         classes = cur.fetchall()
         
-        # Initialize a new Schedule object
-        global_schedules[schedule_key] = Schedule()
-        schedule = global_schedules[schedule_key]
-        
-        # Create ClassInfo objects and add to drawer
+        # Create ClassInfo objects 
         class_info_objects = []
         for cls in classes:
             class_id, department, number, title, credits, requires_matriculation, semesters = cls
@@ -232,17 +239,31 @@ def generate_curriculum_plan(program_id):
                 requires_matriculation=requires_matriculation,
             )
             
-            # Add to both collections
             class_info_objects.append(class_info_obj)
-            schedule.add_to_drawer(class_info_obj)
         
-        # Create planner and add classes
-        planner = CurriculumPlanner(start_semester=start_semester, start_year=start_year)
+        # Create planner with pre-placed classes
+        planner = CurriculumPlanner(
+            start_semester=start_semester, 
+            start_year=start_year,
+            pre_placed_classes=pre_placed_classes
+        )
+        
         for course in class_info_objects:
             planner.add_class(course)
         
         # Generate plan
         semester_plan = planner.plan_curriculum()
+        
+        # Initialize a new Schedule object with the generated plan
+        if schedule_key not in global_schedules:
+            global_schedules[schedule_key] = Schedule()
+        schedule = global_schedules[schedule_key]
+        
+        # Clear existing schedule (but preserve pre-placed classes)
+        existing_semesters = set(schedule.semesters.keys())
+        for semester in existing_semesters:
+            if semester not in pre_placed_classes:
+                schedule.semesters[semester] = []
         
         # Format plan for frontend and update schedule
         formatted_plan = {}
@@ -252,6 +273,10 @@ def generate_curriculum_plan(program_id):
             if courses:  # Only include semesters with courses
                 semester_name = planner.get_semester_name(semester_num)
                 formatted_plan[semester_name] = []
+                
+                # Create or update this semester in the schedule
+                if semester_name not in schedule.semesters:
+                    schedule.semesters[semester_name] = []
                 
                 for course_name in courses:
                     # Find the course info
@@ -265,14 +290,21 @@ def generate_curriculum_plan(program_id):
                             "semesters": course_obj.semesters
                         })
                         
-                        # Add to the semester in the schedule
-                        schedule.add_to_semester(semester_name, course_obj)
-                        scheduled_classes.add(course_name)  # Mark as scheduled
+                        # Check if this is a pre-placed class we want to preserve
+                        if semester_name in pre_placed_classes and course_name in pre_placed_classes[semester_name]:
+                            # If it's already in the semester due to being pre-placed, don't add it again
+                            pass
+                        else:
+                            # Add new class to the semester
+                            schedule.add_to_semester(semester_name, course_obj)
+                        
+                        scheduled_classes.add(course_name)
         
-        # Now remove scheduled classes from drawer
-        # We need to implement this functionality in Schedule class
-        # For now, we'll track what's scheduled separately
+        # Store scheduled classes for future drawer filtering
         schedule.scheduled_classes = scheduled_classes
+        
+        # Update class objects in drawer
+        schedule.drawer = [cls for cls in class_info_objects]
         
         cur.close()
         conn.close()
@@ -280,6 +312,7 @@ def generate_curriculum_plan(program_id):
         return jsonify(formatted_plan), 200
     
     except Exception as e:
+        print(f"Error generating plan: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
 # Modified endpoint to get classes from drawer that aren't in any semester

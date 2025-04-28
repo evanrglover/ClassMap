@@ -218,12 +218,20 @@ function App() {
                     Authorization: `Bearer ${token}`
                 };
             }
+
+            const prePlacedClasses = {};
+            Object.entries(data).forEach(([semester, classes]) => {
+                if (classes.length > 0) {
+                    prePlacedClasses[semester] = classes.map(c => c.className || c.id);
+                }
+            });
             
             const response = await axios.post(
                 `${API_BASE_URL}/generatePlan/${programId}`,
                 {
                     startSemester: "Spring", 
-                    startYear: 2025
+                    startYear: 2025,
+                    prePlacedClasses: prePlacedClasses
                 },
                 config
             );
