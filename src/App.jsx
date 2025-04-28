@@ -467,6 +467,53 @@ function App() {
         id: cls.id || `${cls.department} ${cls.number}`
     }));
 
+    const handleClearSchedule = async () => {
+        if (!selectedProgramId) {
+            setError("No program selected");
+            return;
+        }
+    
+        // Confirm with user
+        if (!window.confirm("Are you sure you want to clear all classes from your schedule?")) {
+            return;
+        }
+    
+        try {
+            // Set up headers with token if available
+            const config = {};
+            if (token) {
+                config.headers = {
+                    Authorization: `Bearer ${token}`
+                };
+            }
+            
+            // Call backend to clear schedule
+            await axios.post(
+                `${API_BASE_URL}/clearSchedule/${selectedProgramId}`,
+                {},
+                config
+            );
+            
+            // Move all classes back to drawer by creating empty semesters
+            // but keeping the same structure
+            const emptySemesters = {};
+            Object.keys(data).forEach(semester => {
+                emptySemesters[semester] = [];
+            });
+            
+            setData(emptySemesters);
+            
+            // If this was a saved schedule, we need to update it
+            if (selectedScheduleId) {
+                handleSaveSchedule();
+            }
+            
+        } catch (error) {
+            console.error("Error clearing schedule:", error);
+            setError("Failed to clear schedule");
+        }
+    };
+
     return (
         <>
             <h2>Welcome {localStorage.getItem("userName")} </h2>
@@ -517,6 +564,15 @@ function App() {
                     disabled={Object.keys(data).length === 0 || !selectedProgramId}
                 >
                     Save Schedule
+                </button>
+                <button 
+                    onClick={handleClearSchedule} 
+                    className={styles['ClearButton'] || styles['SaveButton']}
+                    disabled={Object.keys(data).length === 0 || 
+                            Object.values(data).flat().length === 0 || 
+                            !selectedProgramId}
+                >
+                    Clear Schedule
                 </button>
             </div>
 

@@ -54,15 +54,23 @@ def get_user_id_from_request():
     else:
         user_id = 'anonymous'
     return user_id
-
-@app.route("/login", methods=["POST"])
-def login():
+@app.route("/login/<school>", methods=["POST"])
+def login(school):
+    print("School is " + school)
     data = request.get_json()
     email = data.get("email")
     password = data.get("password")
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT studentid, password, firstname, lastname FROM Student WHERE studentemail = %s", (email,))
+    cur.execute(
+        "SELECT s.studentid, s.password, s.firstname, s.lastname "
+        "FROM student s "
+        "JOIN schoolstudent ss ON s.studentid = ss.studentid "
+        "JOIN school sc ON ss.schoolid = sc.schoolid "
+        "WHERE sc.schoolname = %s "
+        "AND s.studentemail = %s;",
+        (school, email)
+    )
     user = cur.fetchone()
     if user and bcrypt.check_password_hash(user[1], password):
         user_id = user[0]
@@ -510,6 +518,32 @@ def get_schedule_classes(schedule_id):
         
     except Exception as e:
         print(f"Error fetching schedule classes: {str(e)}")
+        return jsonify({"error": str(e)}), 500
+    
+
+@app.route("/clearSchedule/<program_id>", methods=["POST"])
+def clear_schedule(program_id):
+    try:
+        # Get user ID from token
+        user_id = get_user_id_from_request()
+            
+        # Create key for this user+program combination
+        schedule_key = f"{user_id}_{program_id}"
+        
+        # Check if we have a schedule for this user+program
+        if schedule_key not in global_schedules:
+            return jsonify({"message": "No active schedule to clear"}), 200
+        
+        # Get the schedule
+        schedule = global_schedules[schedule_key]
+        
+        # Clear all semesters but keep classes in drawer
+        schedule.semesters = {}
+        schedule.scheduled_classes = set()
+        
+        return jsonify({"message": "Schedule cleared successfully"}), 200
+    
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 # port configuration
