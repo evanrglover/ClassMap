@@ -13,10 +13,10 @@ const SelectSchool = ({setToken}) => {
     const [schoolColor, setSchoolColor] = useState("");
     
         useEffect(() => {
-            const fetchUniversities = async () => {
+            // const fetchUniversities = async () => {
                 try {
-                    // const response = await axios.get("https://ClassMap.onrender.com/SelectSchool");
-                    const response = await axios.get("http://127.0.0.1:5000/SelectSchool");
+                    const response = await axios.get("https://ClassMap.onrender.com/SelectSchool");
+                    // const response = await axios.get("http://127.0.0.1:5000/SelectSchool");
                     console.log("API response:", response.data);
                     setUniversities(response.data);
                 } catch (error) {

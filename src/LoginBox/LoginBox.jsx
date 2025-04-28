@@ -18,9 +18,9 @@ const Login = ({ setToken }) => {
     e.preventDefault();
     try {
       //local
-      const response = await axios.post(`http://127.0.0.1:5000/login/${school}`, { email, password });
+      // const response = await axios.post(`http://127.0.0.1:5000/login/${school}`, { email, password });
       //render
-      // const response = await axios.post("https://ClassMap.onrender.com/login", { email, password });
+      const response = await axios.post("https://ClassMap.onrender.com/login", { email, password });
       
       // Store token
       localStorage.setItem("token", response.data.access_token);
