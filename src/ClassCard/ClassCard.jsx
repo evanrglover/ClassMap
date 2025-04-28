@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import styles from "./ClassCard.module.css"
+import { useDraggable } from '@dnd-kit/core';
 import ReactCardFlip from "react-card-flip";
 import ClassDescription from "../ClassDescription/ClassDescriptionBox"
 
@@ -9,6 +10,14 @@ function ClassCard(props){
 
         const prereqs = [props.PreReqs];
         const postreqs = [props.PostReqs];
+
+        const { attributes, listeners, setNodeRef, transform } = useDraggable({
+            id: props.ClassName
+        });
+
+        const style = transform
+        ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
+        : undefined;
     
         const bgColor = props.ReqType === "core"
         ? "var(--CORE-BG-COLOR)"
@@ -22,17 +31,14 @@ function ClassCard(props){
         
         return(
         <>
-            #The Flipping Card
-            <div className={styles["Card"]} style={{ backgroundColor: bgColor }}>
+            {/* The Flipping Card */}
+            <div ref={setNodeRef} {...listeners} {...attributes} className={styles["Card"]} style={{ backgroundColor: bgColor }}>
                 <ReactCardFlip flipDirection="horizontal" isFlipped={isFlipped}>
                     <div className='card' onClick={flipCard}>
                         <h2 className={styles["Card-CourseId"]}>{props.ClassName}</h2>
                         <h3 className={styles["Card-CourseName"]}>{props.ClassDescription}</h3>
                         <p className={styles["Card-Credits"]}>Credits: {props.Credits}</p>
                         <p className={styles["Card-Semesters"]}>Semesters: {props.Semesters}</p>
-
-
-
 
                         <div className={styles["Card-Grid"]}>
                             {/* First row: Class Name and Description */}

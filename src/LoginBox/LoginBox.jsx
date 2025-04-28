@@ -3,6 +3,7 @@ import styles from './LoginBox.module.css'
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate, useParams } from 'react-router-dom';
+import useSchoolColor from '../Hooks/UseSchoolColor';
 
 const Login = ({ setToken }) => {
   const [email, setEmail] = useState("");
@@ -11,13 +12,15 @@ const Login = ({ setToken }) => {
   const navigate = useNavigate();
   const { school } = useParams();
 
+  useSchoolColor();
+
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
       //local
-      //const response = await axios.post("http://127.0.0.1:5000/login", { email, password });
+      const response = await axios.post(`http://127.0.0.1:5000/login/${school}`, { email, password });
       //render
-      const response = await axios.post("https://ClassMap.onrender.com/login", { email, password });
+      // const response = await axios.post("https://ClassMap.onrender.com/login", { email, password });
       
       // Store token
       localStorage.setItem("token", response.data.access_token);

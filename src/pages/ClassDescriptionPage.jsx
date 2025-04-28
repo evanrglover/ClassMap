@@ -2,6 +2,8 @@ import React from "react"
 import styles from "../LoginPage/Login.module.css"
 import ClassDescription from "../ClassDescription/ClassDescriptionBox.jsx";
 
+useSchoolColor();
+
 function ClassDescription(){
 
     return(
