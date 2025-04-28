@@ -16,7 +16,13 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { DndContext, pointerWithin, rectIntersection } from '@dnd-kit/core';
 import { SortableContext, arrayMove } from '@dnd-kit/sortable';
 
+import useSchoolColor from './Hooks/UseSchoolColor.js';
+
 function App() {
+
+    useSchoolColor();
+
+
     const { school, user } = useParams();
     const [token, setToken] = useState(localStorage.getItem('token') || '');
     const [error, setError] = useState("");

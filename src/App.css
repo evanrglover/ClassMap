@@ -9,16 +9,16 @@ html, body{
   width: 100%;
   height: 100%;
   margin: 0;
-  align-items: center;
-
+  padding: 0;
+  /* align-items: center; */
+  overflow-y: auto;
+  
 }
 
 #root{
   height: 100%;
-  background-color: #00843d;
-  padding: 1%;
-
-  position: relative;
+  background-color: var(--school-bg);
+  padding: 0%;
   width: 100%;
   overflow-y: hidden;
 }
