@@ -47,8 +47,9 @@ function App() {
     useEffect(() => {
         const fetchPrograms = async () => {
             try {
+                const userId = localStorage.getItem('userId');
                 console.log("Fetching programs...");
-                const response = await axios.get(`${API_BASE_URL}/getPrograms`);
+                const response = await axios.get(`${API_BASE_URL}/getPrograms/${userId}`);
                 console.log("API response:", response.data);
                 setPrograms(response.data);
             } catch (error) {
