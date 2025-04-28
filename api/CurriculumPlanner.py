@@ -9,7 +9,7 @@ class CurriculumPlanner:
     def __init__(self, start_semester="Spring", start_year=2025, pre_placed_classes=None):
         self.dependency_graph = nx.DiGraph()
         self.classes: Dict[str, ClassInfo] = {}
-        self.matriculation_courses = {"CS 1400", "CS 1410", "CS 2300", "CS 2420", "CS 2450", "MATH 1210"}
+        #self.matriculation_courses = {"CS 1400", "CS 1410", "CS 2300", "CS 2420", "CS 2450", "MATH 1210"}
         self.semester_plan = {i: [] for i in range(1, 13)}  # Increase to handle more semesters including summers
         self.max_classes_per_semester = 4
         self.start_semester = start_semester
@@ -31,7 +31,7 @@ class CurriculumPlanner:
         # Track completed courses and courses completed in the current semester
         completed_before_current_semester = set()
         completed_courses = set()
-        matriculation_obtained = False
+        # matriculation_obtained = False
         semester = 1
         pre_placed_classes_by_semester_num = {}
         
@@ -54,8 +54,8 @@ class CurriculumPlanner:
             completed_before_current_semester = completed_courses.copy()
             
             # Check if we have matriculation based on courses completed before this semester
-            if self.matriculation_courses.issubset(completed_before_current_semester):
-                matriculation_obtained = True
+            # if self.matriculation_courses.issubset(completed_before_current_semester):
+            #     matriculation_obtained = True
             
             # Start with pre-placed classes for this semester if any exist
             current_semester_classes = []
@@ -71,6 +71,7 @@ class CurriculumPlanner:
             current_season = self._get_semester_season(semester)
             
             for cls in sorted_classes:
+                print(cls)
                 # Skip if we've reached the maximum classes for this semester
                 if scheduled_this_semester >= self.max_classes_per_semester:
                     break
@@ -86,8 +87,8 @@ class CurriculumPlanner:
                     
                 course = self.classes[cls]
                 # Skip if matriculation is required but not obtained
-                if course.requires_matriculation and not matriculation_obtained:
-                    continue
+                # if course.requires_matriculation and not matriculation_obtained:
+                    # continue
                     
                 # Skip if prerequisites are not met by courses from PREVIOUS semesters
                 if not all(prereq in completed_before_current_semester for prereq in course.prerequisites):

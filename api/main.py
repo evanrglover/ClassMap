@@ -123,13 +123,24 @@ def home():
     return "Home"
 
 # Gets the programs
-@app.route("/getPrograms", methods=["GET"])
-def getPrograms():
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT programid, programname FROM program")
-    programs = cur.fetchall()
-    return jsonify([{"programid": program[0], "programname": program[1]} for program in programs]), 200
+@app.route("/getPrograms/<userID>", methods=["GET"])
+def getPrograms(userID):
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+        SELECT program.programid, program.programname
+        FROM studentprogram
+        JOIN program ON studentprogram.programid = program.programid
+        WHERE studentprogram.studentid = %s;
+        """, (userID,))
+        programs = cur.fetchall()
+        print("hello")
+        print("Programs fetched from DB:", programs)
+        return jsonify([{"programid": program[0], "programname": program[1]} for program in programs]), 200
+    except Exception as e:
+        print(f"Error fetching programs: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 #get classes for a specific program
 @app.route("/getProgramClasses/<program_id>", methods=["GET"])
