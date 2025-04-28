@@ -70,6 +70,29 @@ function App() {
         fetchSchedules();
     }, []);
 
+    // Function to create empty semesters based on start semester and number of semesters
+    const createEmptySemesters = (startSemester = "Spring", startYear = 2025, numSemesters = 8) => {
+        const semesters = ["Spring", "Summer", "Fall"];
+        const emptySemesters = {};
+        
+        let currentSemesterIndex = semesters.indexOf(startSemester);
+        let currentYear = startYear;
+        
+        for (let i = 0; i < numSemesters; i++) {
+            const semesterName = `${semesters[currentSemesterIndex]} ${currentYear}`;
+            emptySemesters[semesterName] = [];
+            
+            // Move to next semester
+            currentSemesterIndex = (currentSemesterIndex + 1) % semesters.length;
+            if (currentSemesterIndex === 0) {
+                // Increment year when we circle back to Spring
+                currentYear++;
+            }
+        }
+        
+        return emptySemesters;
+    };
+
     // Custom collision detection algorithm from drag-and-drop implementation
     function customCollisionDetectionAlgorithm(args) {
         const pointerCollisions = pointerWithin(args);
@@ -358,7 +381,6 @@ function App() {
     const handleProgramChange = (e) => {
         const programName = e.target.value;
         setSelectedProgram(programName);
-        setData({}); // Clear any existing schedule data
         
         // Reset schedule selection
         setSelectedSchedule("");
@@ -372,9 +394,14 @@ function App() {
             
             // Fetch program classes
             fetchProgramClasses(programId);
+            
+            // Create empty semester columns for the new program
+            const emptySemesters = createEmptySemesters("Spring", 2025, 8);
+            setData(emptySemesters);
         } else {
             setProgramClasses([]);
             setSelectedProgramId("");
+            setData({});  // Clear any existing data
         }
         
         console.log("Selected program:", programName);
