@@ -6,15 +6,16 @@ from ClassInfo import ClassInfo
 
 class CurriculumPlanner:
     
-    def __init__(self, start_semester="Spring", start_year=2025):
+    def __init__(self, start_semester="Spring", start_year=2025, pre_placed_classes=None):
         self.dependency_graph = nx.DiGraph()
         self.classes: Dict[str, ClassInfo] = {}
-        self.matriculation_courses = {"CS 1400", "CS 1410", "CS 2300", "CS 2420", "CS 2450", "MATH 1210"}
+        #self.matriculation_courses = {"CS 1400", "CS 1410", "CS 2300", "CS 2420", "CS 2450", "MATH 1210"}
         self.semester_plan = {i: [] for i in range(1, 13)}  # Increase to handle more semesters including summers
         self.max_classes_per_semester = 4
         self.start_semester = start_semester
         self.start_year = start_year
-    
+        self.pre_placed_classes = pre_placed_classes or {}  # Map of semester name to list of class names
+        
     def add_class(self, class_info: ClassInfo):
         self.classes[class_info.name] = class_info
         self.dependency_graph.add_node(class_info.name)
@@ -30,33 +31,64 @@ class CurriculumPlanner:
         # Track completed courses and courses completed in the current semester
         completed_before_current_semester = set()
         completed_courses = set()
-        matriculation_obtained = False
+        # matriculation_obtained = False
         semester = 1
-
+        pre_placed_classes_by_semester_num = {}
         
-        while sorted_classes and semester <= 12:  # Increased max semesters
+        # Map pre-placed classes to semester numbers and mark them as completed
+        if self.pre_placed_classes:
+            for semester_name, class_list in self.pre_placed_classes.items():
+                # Find semester number from name
+                for sem_num in range(1, 13):
+                    if self.get_semester_name(sem_num) == semester_name:
+                        pre_placed_classes_by_semester_num[sem_num] = class_list
+                        
+                        # Add pre-placed classes to completed courses
+                        for class_name in class_list:
+                            if class_name in sorted_classes:
+                                sorted_classes.remove(class_name)
+                                completed_courses.add(class_name)
+        
+        while sorted_classes and semester <= 12:
             # At the start of a new semester, update the completed courses from previous semesters
             completed_before_current_semester = completed_courses.copy()
             
             # Check if we have matriculation based on courses completed before this semester
-            if self.matriculation_courses.issubset(completed_before_current_semester):
-                matriculation_obtained = True
-                
-            scheduled_this_semester = 0
-            remaining_classes = sorted_classes.copy()
+            # if self.matriculation_courses.issubset(completed_before_current_semester):
+            #     matriculation_obtained = True
+            
+            # Start with pre-placed classes for this semester if any exist
             current_semester_classes = []
+            if semester in pre_placed_classes_by_semester_num:
+                current_semester_classes = pre_placed_classes_by_semester_num[semester]
+                scheduled_this_semester = len(current_semester_classes)
+            else:
+                scheduled_this_semester = 0
+            
+            remaining_classes = sorted_classes.copy()
             
             # Get the current semester season
             current_season = self._get_semester_season(semester)
             
             for cls in sorted_classes:
+                print(cls)
                 # Skip if we've reached the maximum classes for this semester
                 if scheduled_this_semester >= self.max_classes_per_semester:
                     break
+                
+                # Skip if this class is already pre-placed in any semester
+                already_placed = False
+                for sem_classes in pre_placed_classes_by_semester_num.values():
+                    if cls in sem_classes:
+                        already_placed = True
+                        break
+                if already_placed:
+                    continue
+                    
                 course = self.classes[cls]
                 # Skip if matriculation is required but not obtained
-                if course.requires_matriculation and not matriculation_obtained:
-                    continue
+                # if course.requires_matriculation and not matriculation_obtained:
+                    # continue
                     
                 # Skip if prerequisites are not met by courses from PREVIOUS semesters
                 if not all(prereq in completed_before_current_semester for prereq in course.prerequisites):
@@ -82,7 +114,6 @@ class CurriculumPlanner:
             semester += 1
         
         return self.semester_plan
-    
     def _get_semester_season(self, semester_number):
         """
         Maps semester number to season (spring, summer, fall) based on starting semester
@@ -131,6 +162,14 @@ class CurriculumPlanner:
         """
         Check if a course is available in the given semester
         """
+        semester_name = self.get_semester_name(semester)
+        
+        # Always return True for pre-placed classes in this semester
+        for sem_name, classes in self.pre_placed_classes.items():
+            if sem_name == semester_name and course.name in classes:
+                return True
+        
+        # Otherwise check regular semester availability
         current_season = self._get_semester_season(semester)
         return current_season in course.semesters
     
@@ -143,7 +182,6 @@ class CurriculumPlanner:
         return f"{season.capitalize()} {year}"
     
     def print_curriculum(self):
-        print("Curriculum Semester Plan:")
         for semester in range(1, 13):
             semester_name = self.get_semester_name(semester)
             classes = self.semester_plan[semester]
@@ -198,7 +236,6 @@ def main():
         planner.add_class(course)
     
     plan = planner.plan_curriculum()
-    planner.print_curriculum()
 
 if __name__ == "__main__":
     main()

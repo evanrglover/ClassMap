@@ -1,6 +1,7 @@
 .container{
-    --BACKGROUND-COLOR: green;
-    background-color: var(--BACKGROUND-COLOR);
+    /* --BACKGROUND-COLOR: green; */
+    /* background-color: var(--school-bg); */
+    background-color: var(--school-bg);
     width: 100%;
     height: 100%;
     overflow: hidden;

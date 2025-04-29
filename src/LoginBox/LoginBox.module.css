@@ -8,6 +8,7 @@
     height: 50%;
     min-width: 300px;
     min-height: 400px;
+    height: auto;
     font-family: Arial, Helvetica, sans-serif;
     display: flex;
     flex-direction: column;
@@ -18,7 +19,7 @@
 .Container form{
     display: flex;
     flex-direction: column;
-    width: 25vw;
+    width: 100%;
     max-width: 400px;
     min-height: 200px;
 }
@@ -33,7 +34,7 @@
 }
 
 .Container button{
-    width: 25vw;
+    width: 100%;
     height: 3rem;
     color: white;
     font-size: 1.3rem;
@@ -46,6 +47,8 @@
 
 .LoginOptions{
     margin-top: 1rem;
+    margin-left: 1rem;
+    margin-right: 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -53,6 +56,7 @@
 
 .LoginOptions-Option{
     color: black;
+    margin: 1rem;
 }
 
 .LoginOptions-Option:hover{
@@ -62,3 +66,10 @@
     text-align: center;
   }
 
+.available-classes {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;       
+    justify-content: flex-start; 
+    width: 100%;
+}

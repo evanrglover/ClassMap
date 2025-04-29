@@ -11,6 +11,8 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  --school-bg: #808080;
 }
 
 a {
@@ -28,6 +30,9 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+
+  background-color: var(--school-bg);
+  transition: background-color 0.3s ease;
 }
 
 h1 {
